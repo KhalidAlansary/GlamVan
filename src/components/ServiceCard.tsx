@@ -1,6 +1,12 @@
-
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
@@ -14,13 +20,20 @@ export interface ServiceProps {
   icon?: LucideIcon;
 }
 
-const ServiceCard: React.FC<ServiceProps> = ({ title, description, price, image, link, icon: Icon }) => {
+const ServiceCard: React.FC<ServiceProps> = ({
+  title,
+  description,
+  price,
+  image,
+  link,
+  icon: Icon,
+}) => {
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg max-w-xs">
       <div className="aspect-[3/2] overflow-hidden relative">
-        <img 
-          src={image} 
-          alt={title} 
+        <img
+          src={image}
+          alt={title}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />
       </div>
@@ -35,7 +48,10 @@ const ServiceCard: React.FC<ServiceProps> = ({ title, description, price, image,
         <CardDescription>{description}</CardDescription>
       </CardContent>
       <CardFooter className="pt-0">
-        <Button asChild className="w-full bg-salon-purple hover:bg-salon-dark-purple transition-all duration-300 shadow-md hover:shadow-xl relative overflow-hidden booking-btn">
+        <Button
+          asChild
+          className="w-full bg-salon-purple hover:bg-salon-dark-purple transition-all duration-300 shadow-md hover:shadow-xl relative overflow-hidden booking-btn"
+        >
           <Link to={link}>Book Now</Link>
         </Button>
       </CardFooter>

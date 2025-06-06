@@ -1,12 +1,20 @@
-
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Booking, Van, Beautician } from "./types/booking";
-import { parseBookingDate, getMinimumPriceForService } from "./utils/bookingUtils";
+import {
+  parseBookingDate,
+  getMinimumPriceForService,
+} from "./utils/bookingUtils";
 import BookingFilters from "./components/BookingFilters";
 import BookingTable from "./components/BookingTable";
 import BookingCalendar from "./components/BookingCalendar";
@@ -19,7 +27,7 @@ const AdminBookings = () => {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  
+
   // Dialogs state
   const [showVanDialog, setShowVanDialog] = useState(false);
   const [showBeauticianDialog, setShowBeauticianDialog] = useState(false);
@@ -46,7 +54,7 @@ const AdminBookings = () => {
       paymentStatus: "paid",
       price: "22000",
       phone: "01012345678",
-      address: "Villa 23, Street 9, 5th Settlement"
+      address: "Villa 23, Street 9, 5th Settlement",
     },
     {
       id: "GLAM-206",
@@ -62,7 +70,7 @@ const AdminBookings = () => {
       paymentStatus: "pending",
       price: "1200",
       phone: "01012345678",
-      address: "Building 12, Group 3, El Rehab City"
+      address: "Building 12, Group 3, El Rehab City",
     },
     {
       id: "GLAM-207",
@@ -78,7 +86,7 @@ const AdminBookings = () => {
       paymentStatus: "pending",
       price: "2000",
       phone: "01557891234",
-      address: "Villa 78, Zayed 2000, Sheikh Zayed"
+      address: "Villa 78, Zayed 2000, Sheikh Zayed",
     },
     {
       id: "GLAM-208",
@@ -94,7 +102,7 @@ const AdminBookings = () => {
       paymentStatus: "not paid",
       price: "500",
       phone: "01544567890",
-      address: "Apartment 5, Building 42, Concord Plaza, New Cairo"
+      address: "Apartment 5, Building 42, Concord Plaza, New Cairo",
     },
     {
       id: "GLAM-209",
@@ -110,13 +118,13 @@ const AdminBookings = () => {
       paymentStatus: "paid",
       price: "22000",
       phone: "01562345678",
-      address: "Villa 35, Group 9, El Rehab City"
+      address: "Villa 35, Group 9, El Rehab City",
     },
     {
-      id: "GLAM-210", 
+      id: "GLAM-210",
       client: "Fatma Hassan",
       service: "Hybrid Extensions",
-      location: "Sheikh Zayed", 
+      location: "Sheikh Zayed",
       beautician: "Yara Khalil",
       van: "GlamVanLuxury 1",
       date: "May 7, 2025",
@@ -126,35 +134,55 @@ const AdminBookings = () => {
       paymentStatus: "paid",
       price: "1800",
       phone: "01598765432",
-      address: "Villa 102, Zayed Dunes Compounds, Sheikh Zayed"
+      address: "Villa 102, Zayed Dunes Compounds, Sheikh Zayed",
     },
   ]);
 
   // Updated locations for Egypt
-  const locations = [
-    "New Cairo",
-    "El Rehab",
-    "Sheikh Zayed",
-    "Tagmo3"
-  ];
+  const locations = ["New Cairo", "El Rehab", "Sheikh Zayed", "Tagmo3"];
 
   // Mock data for van - updated with correct vans
   const vans: Van[] = [
     { id: "v1", name: "GlamVanLuxury", status: "available" },
-    { id: "v2", name: "GlamVanLuxury 1", status: "available" }
+    { id: "v2", name: "GlamVanLuxury 1", status: "available" },
   ];
 
   // Mock data for beauticians
   const beauticians: Beautician[] = [
-    { id: "s1", name: "Layla Mohammed", specialization: "Hair & Makeup", status: "available" },
-    { id: "s2", name: "Nora Abdullah", specialization: "Hair & Nails", status: "busy" },
-    { id: "s3", name: "Aisha Hassan", specialization: "Makeup", status: "available" },
-    { id: "s4", name: "Huda Omar", specialization: "Bridal", status: "available" },
-    { id: "s5", name: "Yara Khalil", specialization: "Makeup Pro", status: "off" },
+    {
+      id: "s1",
+      name: "Layla Mohammed",
+      specialization: "Hair & Makeup",
+      status: "available",
+    },
+    {
+      id: "s2",
+      name: "Nora Abdullah",
+      specialization: "Hair & Nails",
+      status: "busy",
+    },
+    {
+      id: "s3",
+      name: "Aisha Hassan",
+      specialization: "Makeup",
+      status: "available",
+    },
+    {
+      id: "s4",
+      name: "Huda Omar",
+      specialization: "Bridal",
+      status: "available",
+    },
+    {
+      id: "s5",
+      name: "Yara Khalil",
+      specialization: "Makeup Pro",
+      status: "off",
+    },
   ];
-  
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
+
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch =
       booking.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -162,24 +190,28 @@ const AdminBookings = () => {
       booking.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.beautician.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.van.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
-    const matchesPayment = paymentFilter === "all" || booking.paymentStatus === paymentFilter;
-    
+
+    const matchesStatus =
+      statusFilter === "all" || booking.status === statusFilter;
+    const matchesPayment =
+      paymentFilter === "all" || booking.paymentStatus === paymentFilter;
+
     let matchesDate = true;
     if (dateFilter) {
       try {
         const filterDate = new Date(dateFilter);
         const bookingDate = parseBookingDate(booking.date);
-        matchesDate = bookingDate ? bookingDate.toDateString() === filterDate.toDateString() : false;
+        matchesDate = bookingDate
+          ? bookingDate.toDateString() === filterDate.toDateString()
+          : false;
       } catch {
         matchesDate = true;
       }
     }
-    
+
     return matchesSearch && matchesStatus && matchesPayment && matchesDate;
   });
-  
+
   // Toggle view mode between list and calendar
   const toggleViewMode = () => {
     setViewMode(viewMode === "list" ? "calendar" : "list");
@@ -226,15 +258,15 @@ const AdminBookings = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Manage Bookings</h1>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex items-center gap-2"
             onClick={toggleViewMode}
           >
             <CalendarIcon size={16} />
             {viewMode === "list" ? "Calendar View" : "List View"}
           </Button>
-          <Button 
+          <Button
             className="bg-salon-purple hover:bg-salon-dark-purple booking-btn"
             onClick={() => setShowCreateDialog(true)}
           >
@@ -266,7 +298,8 @@ const AdminBookings = () => {
           <CardHeader>
             <CardTitle>Bookings</CardTitle>
             <CardDescription>
-              {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''} found
+              {filteredBookings.length} booking
+              {filteredBookings.length !== 1 ? "s" : ""} found
             </CardDescription>
           </CardHeader>
           <CardContent>

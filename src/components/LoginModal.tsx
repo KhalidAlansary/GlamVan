@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,11 +30,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // For demo purposes, auto-fill credentials based on user type
     let loginEmail = email;
     let loginPassword = password;
-    
+
     if (userType === "admin" && !email && !password) {
       loginEmail = "admin@example.com";
       loginPassword = "admin123";
@@ -52,7 +51,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           description: "You have been logged in successfully.",
         });
         onClose();
-        
+
         // Redirect based on user type
         if (userType === "admin") {
           navigate("/admin");
@@ -84,7 +83,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             Enter your credentials to access your account.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs defaultValue="client" onValueChange={setUserType}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="client">Client</TabsTrigger>

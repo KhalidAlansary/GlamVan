@@ -1,4 +1,3 @@
-
 import { CheckCircle, User, Star, MapPin } from "lucide-react";
 
 const CriteriaBar = () => {
@@ -6,23 +5,23 @@ const CriteriaBar = () => {
     {
       icon: CheckCircle,
       title: "Sanitized Equipment",
-      description: "All tools thoroughly sanitized"
+      description: "All tools thoroughly sanitized",
     },
     {
       icon: User,
       title: "Female Stylists Only",
-      description: "Professional female beauticians"
+      description: "Professional female beauticians",
     },
     {
       icon: Star,
       title: "Premium Products",
-      description: "High-quality beauty products"
+      description: "High-quality beauty products",
     },
     {
       icon: MapPin,
       title: "Greater Cairo Area",
-      description: "Service coverage area"
-    }
+      description: "Service coverage area",
+    },
   ];
 
   return (
@@ -37,9 +36,7 @@ const CriteriaBar = () => {
               <h3 className="font-playfair font-semibold text-lg text-salon-dark mb-2">
                 {item.title}
               </h3>
-              <p className="text-gray-600 text-sm">
-                {item.description}
-              </p>
+              <p className="text-gray-600 text-sm">{item.description}</p>
             </div>
           ))}
         </div>

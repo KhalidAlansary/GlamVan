@@ -1,18 +1,17 @@
-
 import { services } from "@/data/services";
 import { Booking } from "../types/booking";
 
 export const getMinimumPriceForService = (serviceName: string): number => {
-  const service = services.find(s => s.title === serviceName);
+  const service = services.find((s) => s.title === serviceName);
   if (!service) return 0;
-  
+
   const priceString = service.price;
   // Extract numeric value from price string like "500 EGP" or "22,000+ EGP"
   const priceMatch = priceString.match(/(\d[\d,]*)/);
-  
+
   if (priceMatch && priceMatch[1]) {
     // Remove commas and convert to number
-    return parseInt(priceMatch[1].replace(/,/g, ''));
+    return parseInt(priceMatch[1].replace(/,/g, ""));
   }
   return 0;
 };
@@ -69,9 +68,11 @@ export const autoAssignVan = (location: string): string => {
   }
 };
 
-export const validatePhone = (phone: string): { isValid: boolean; error: string } => {
-  const cleanPhone = phone.replace(/\D/g, '');
-  
+export const validatePhone = (
+  phone: string,
+): { isValid: boolean; error: string } => {
+  const cleanPhone = phone.replace(/\D/g, "");
+
   if (!cleanPhone) {
     return { isValid: false, error: "Phone number is required" };
   } else if (cleanPhone.length !== 11) {
@@ -79,6 +80,6 @@ export const validatePhone = (phone: string): { isValid: boolean; error: string 
   } else if (!/^\d+$/.test(cleanPhone)) {
     return { isValid: false, error: "Phone number must contain only digits" };
   }
-  
+
   return { isValid: true, error: "" };
 };

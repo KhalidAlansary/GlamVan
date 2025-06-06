@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,10 +45,10 @@ const Admin = () => {
         <Route path="/weddings" element={<AdminWeddings />} />
         <Route path="/payments" element={<AdminPayments />} />
         <Route path="/vans" element={<AdminVans />} />
-        
+
         {/* Redirect root admin path to dashboard */}
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-        
+
         {/* Default route for any other unmatched paths */}
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,16 +9,21 @@ interface GoogleBookingMapProps {
 }
 
 const GoogleBookingMap = ({ location, address }: GoogleBookingMapProps) => {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const locationCoords = {
     "New Cairo": { lat: 30.0133, lng: 31.4967 },
     "El Rehab": { lat: 30.0722, lng: 31.4911 },
     "Sheikh Zayed": { lat: 30.0644, lng: 30.9767 },
-    "Tagmo3": { lat: 30.0278, lng: 31.4594 }
+    Tagmo3: { lat: 30.0278, lng: 31.4594 },
   };
 
-  const coords = locationCoords[location as keyof typeof locationCoords] || locationCoords["New Cairo"];
+  const coords =
+    locationCoords[location as keyof typeof locationCoords] ||
+    locationCoords["New Cairo"];
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -27,14 +31,14 @@ const GoogleBookingMap = ({ location, address }: GoogleBookingMapProps) => {
         (position) => {
           setUserLocation({
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           });
           toast.success("Location detected successfully!");
         },
         (error) => {
           toast.error("Unable to detect location. Using default location.");
           console.log("Location error:", error);
-        }
+        },
       );
     } else {
       toast.error("Geolocation is not supported by this browser.");
@@ -43,7 +47,7 @@ const GoogleBookingMap = ({ location, address }: GoogleBookingMapProps) => {
 
   const openInGoogleMaps = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   useEffect(() => {
@@ -58,12 +62,13 @@ const GoogleBookingMap = ({ location, address }: GoogleBookingMapProps) => {
         {address && <p className="text-sm text-gray-600 mt-1">{address}</p>}
         {userLocation && (
           <p className="text-xs text-green-600 mt-2">
-            Your location: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+            Your location: {userLocation.lat.toFixed(4)},{" "}
+            {userLocation.lng.toFixed(4)}
           </p>
         )}
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className="mt-4"
           onClick={openInGoogleMaps}
         >

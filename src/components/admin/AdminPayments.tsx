@@ -1,10 +1,21 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X, DollarSign } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { services } from "@/data/services";
 
 const AdminPayments = () => {
@@ -15,9 +26,9 @@ const AdminPayments = () => {
     paymentId: "",
     client: "",
     amount: "",
-    reason: ""
+    reason: "",
   });
-  
+
   // Mock data for payments - updated with actual service prices
   const [payments, setPayments] = useState([
     {
@@ -28,7 +39,7 @@ const AdminPayments = () => {
       method: "Vodafone Cash",
       status: "verified",
       bookingId: "BK-1234",
-      service: "Bridal Makeup"
+      service: "Bridal Makeup",
     },
     {
       id: "P-4502",
@@ -38,7 +49,7 @@ const AdminPayments = () => {
       method: "InstaPay",
       status: "pending",
       bookingId: "BK-1235",
-      service: "Hair Trimming"
+      service: "Hair Trimming",
     },
     {
       id: "P-4503",
@@ -48,7 +59,7 @@ const AdminPayments = () => {
       method: "Vodafone Cash",
       status: "pending",
       bookingId: "BK-1237",
-      service: "Lash Lifting"
+      service: "Lash Lifting",
     },
     {
       id: "P-4504",
@@ -58,7 +69,7 @@ const AdminPayments = () => {
       method: "Credit Card",
       status: "verified",
       bookingId: "BK-1238",
-      service: "Hybrid Extensions"
+      service: "Hybrid Extensions",
     },
     {
       id: "P-4505",
@@ -68,7 +79,7 @@ const AdminPayments = () => {
       method: "InstaPay",
       status: "failed",
       bookingId: "BK-1236",
-      service: "Hard Gel Extensions"
+      service: "Hard Gel Extensions",
     },
   ]);
 
@@ -81,7 +92,7 @@ const AdminPayments = () => {
       date: "April 26, 2025",
       originalPayment: "P-4432",
       reason: "Service cancelled 48 hours in advance",
-      status: "processed"
+      status: "processed",
     },
     {
       id: "R-1002",
@@ -90,27 +101,27 @@ const AdminPayments = () => {
       date: "April 27, 2025",
       originalPayment: "P-4450",
       reason: "Partial refund - service modified",
-      status: "pending"
-    }
+      status: "pending",
+    },
   ]);
 
   // Handler for verifying a payment
   const handleVerifyPayment = (paymentId: string) => {
-    setPayments(payments.map(payment => 
-      payment.id === paymentId 
-        ? { ...payment, status: "verified" } 
-        : payment
-    ));
+    setPayments(
+      payments.map((payment) =>
+        payment.id === paymentId ? { ...payment, status: "verified" } : payment,
+      ),
+    );
     toast.success(`Payment ${paymentId} has been verified`);
   };
 
   // Handler for rejecting a payment
   const handleRejectPayment = (paymentId: string) => {
-    setPayments(payments.map(payment => 
-      payment.id === paymentId 
-        ? { ...payment, status: "failed" } 
-        : payment
-    ));
+    setPayments(
+      payments.map((payment) =>
+        payment.id === paymentId ? { ...payment, status: "failed" } : payment,
+      ),
+    );
     toast.error(`Payment ${paymentId} has been rejected`);
   };
 
@@ -128,21 +139,21 @@ const AdminPayments = () => {
 
   // Handler for approving a refund
   const handleApproveRefund = (refundId: string) => {
-    setRefunds(refunds.map(refund => 
-      refund.id === refundId 
-        ? { ...refund, status: "processed" } 
-        : refund
-    ));
+    setRefunds(
+      refunds.map((refund) =>
+        refund.id === refundId ? { ...refund, status: "processed" } : refund,
+      ),
+    );
     toast.success(`Refund ${refundId} has been processed`);
   };
 
   // Handler for rejecting a refund
   const handleRejectRefund = (refundId: string) => {
-    setRefunds(refunds.map(refund => 
-      refund.id === refundId 
-        ? { ...refund, status: "rejected" } 
-        : refund
-    ));
+    setRefunds(
+      refunds.map((refund) =>
+        refund.id === refundId ? { ...refund, status: "rejected" } : refund,
+      ),
+    );
     toast.error(`Refund ${refundId} has been rejected`);
   };
 
@@ -163,12 +174,16 @@ const AdminPayments = () => {
       id: `R-${1003 + refunds.length}`,
       client: newRefund.client,
       amount: newRefund.amount,
-      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      date: new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
       originalPayment: newRefund.paymentId,
       reason: newRefund.reason,
-      status: "pending"
+      status: "pending",
     };
-    
+
     setRefunds([...refunds, newRefundEntry]);
     setNewRefund({ paymentId: "", client: "", amount: "", reason: "" });
     toast.success("Refund issued successfully");
@@ -177,7 +192,7 @@ const AdminPayments = () => {
 
   // Get payment status badge classes
   const getPaymentStatusClass = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "verified":
         return "bg-green-100 text-green-800";
       case "pending":
@@ -191,7 +206,7 @@ const AdminPayments = () => {
 
   // Get refund status badge classes
   const getRefundStatusClass = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "processed":
         return "bg-green-100 text-green-800";
       case "pending":
@@ -211,7 +226,9 @@ const AdminPayments = () => {
       <Card className="border-none shadow-md max-w-5xl mx-auto">
         <CardHeader>
           <CardTitle>Payment Verification</CardTitle>
-          <CardDescription>Verify incoming payments from mobile payment services</CardDescription>
+          <CardDescription>
+            Verify incoming payments from mobile payment services
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -235,62 +252,59 @@ const AdminPayments = () => {
                     <td className="px-4 py-4 text-sm font-medium">
                       {payment.id}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      {payment.client}
-                    </td>
+                    <td className="px-4 py-4 text-sm">{payment.client}</td>
                     <td className="px-4 py-4 text-sm font-medium">
                       {payment.amount}
                     </td>
+                    <td className="px-4 py-4 text-sm">{payment.date}</td>
+                    <td className="px-4 py-4 text-sm">{payment.method}</td>
+                    <td className="px-4 py-4 text-sm">{payment.bookingId}</td>
+                    <td className="px-4 py-4 text-sm">{payment.service}</td>
                     <td className="px-4 py-4 text-sm">
-                      {payment.date}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {payment.method}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {payment.bookingId}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {payment.service}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusClass(payment.status)}`}>
-                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusClass(payment.status)}`}
+                      >
+                        {payment.status.charAt(0).toUpperCase() +
+                          payment.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm">
                       <div className="flex space-x-2">
                         {payment.status === "pending" && (
                           <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="bg-green-50 text-green-600 hover:bg-green-100"
-                              onClick={() => handleVerifyPayment(payment.id)}>
+                              onClick={() => handleVerifyPayment(payment.id)}
+                            >
                               <Check className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="bg-red-50 text-red-600 hover:bg-red-100"
-                              onClick={() => handleRejectPayment(payment.id)}>
+                              onClick={() => handleRejectPayment(payment.id)}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
                           </>
                         )}
                         {payment.status === "verified" && (
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => handleViewPayment(payment)}>
+                            onClick={() => handleViewPayment(payment)}
+                          >
                             View
                           </Button>
                         )}
                         {payment.status === "failed" && (
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => handleContactAboutPayment(payment)}>
+                            onClick={() => handleContactAboutPayment(payment)}
+                          >
                             Contact
                           </Button>
                         )}
@@ -331,51 +345,51 @@ const AdminPayments = () => {
                     <td className="px-4 py-4 text-sm font-medium">
                       {refund.id}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      {refund.client}
-                    </td>
+                    <td className="px-4 py-4 text-sm">{refund.client}</td>
                     <td className="px-4 py-4 text-sm font-medium">
                       {refund.amount}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      {refund.date}
-                    </td>
+                    <td className="px-4 py-4 text-sm">{refund.date}</td>
                     <td className="px-4 py-4 text-sm">
                       {refund.originalPayment}
                     </td>
+                    <td className="px-4 py-4 text-sm">{refund.reason}</td>
                     <td className="px-4 py-4 text-sm">
-                      {refund.reason}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRefundStatusClass(refund.status)}`}>
-                        {refund.status.charAt(0).toUpperCase() + refund.status.slice(1)}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRefundStatusClass(refund.status)}`}
+                      >
+                        {refund.status.charAt(0).toUpperCase() +
+                          refund.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm">
                       <div className="flex space-x-2">
                         {refund.status === "pending" && (
                           <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="bg-green-50 text-green-600 hover:bg-green-100"
-                              onClick={() => handleApproveRefund(refund.id)}>
+                              onClick={() => handleApproveRefund(refund.id)}
+                            >
                               <Check className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="bg-red-50 text-red-600 hover:bg-red-100"
-                              onClick={() => handleRejectRefund(refund.id)}>
+                              onClick={() => handleRejectRefund(refund.id)}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
                           </>
                         )}
                         {refund.status === "processed" && (
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => handleViewRefund(refund)}>
+                            onClick={() => handleViewRefund(refund)}
+                          >
                             View
                           </Button>
                         )}
@@ -387,9 +401,10 @@ const AdminPayments = () => {
             </table>
 
             <div className="mt-6 flex justify-end">
-              <Button 
+              <Button
                 className="bg-salon-purple hover:bg-salon-dark-purple booking-btn"
-                onClick={handleIssueNewRefund}>
+                onClick={handleIssueNewRefund}
+              >
                 Issue New Refund
               </Button>
             </div>
@@ -412,20 +427,25 @@ const AdminPayments = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">Vodafone Cash</h3>
-                  <p className="text-sm text-gray-500">Mobile payment service</p>
+                  <p className="text-sm text-gray-500">
+                    Mobile payment service
+                  </p>
                 </div>
               </div>
               <div className="flex items-center">
                 <span className="text-green-600 font-medium mr-4">Active</span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  onClick={() => toast.info("Vodafone Cash configuration opened")}>
+                  onClick={() =>
+                    toast.info("Vodafone Cash configuration opened")
+                  }
+                >
                   Configure
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between py-2 border-b">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center text-blue-600 mr-4">
@@ -433,20 +453,23 @@ const AdminPayments = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">InstaPay</h3>
-                  <p className="text-sm text-gray-500">Online payment platform</p>
+                  <p className="text-sm text-gray-500">
+                    Online payment platform
+                  </p>
                 </div>
               </div>
               <div className="flex items-center">
                 <span className="text-green-600 font-medium mr-4">Active</span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  onClick={() => toast.info("InstaPay configuration opened")}>
+                  onClick={() => toast.info("InstaPay configuration opened")}
+                >
                   Configure
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between py-2 border-b">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 mr-4">
@@ -454,20 +477,23 @@ const AdminPayments = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">Credit Card</h3>
-                  <p className="text-sm text-gray-500">Visa, Mastercard, AMEX</p>
+                  <p className="text-sm text-gray-500">
+                    Visa, Mastercard, AMEX
+                  </p>
                 </div>
               </div>
               <div className="flex items-center">
                 <span className="text-green-600 font-medium mr-4">Active</span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  onClick={() => toast.info("Credit Card configuration opened")}>
+                  onClick={() => toast.info("Credit Card configuration opened")}
+                >
                   Configure
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 mr-4">
@@ -475,13 +501,18 @@ const AdminPayments = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">Add Payment Method</h3>
-                  <p className="text-sm text-gray-500">Configure a new payment option</p>
+                  <p className="text-sm text-gray-500">
+                    Configure a new payment option
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
-                onClick={() => toast.info("Add new payment method dialog opened")}>
+                onClick={() =>
+                  toast.info("Add new payment method dialog opened")
+                }
+              >
                 Add New
               </Button>
             </div>
@@ -491,7 +522,10 @@ const AdminPayments = () => {
 
       {/* Dialogs */}
       {/* View Payment Dialog */}
-      <Dialog open={openDialog === "viewPayment"} onOpenChange={() => setOpenDialog(null)}>
+      <Dialog
+        open={openDialog === "viewPayment"}
+        onOpenChange={() => setOpenDialog(null)}
+      >
         <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Payment Details</DialogTitle>
@@ -500,7 +534,9 @@ const AdminPayments = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Payment ID</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Payment ID
+                  </p>
                   <p>{selectedPayment.id}</p>
                 </div>
                 <div>
@@ -516,7 +552,9 @@ const AdminPayments = () => {
                   <p>{selectedPayment.date}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Payment Method</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Payment Method
+                  </p>
                   <p>{selectedPayment.method}</p>
                 </div>
                 <div>
@@ -524,13 +562,18 @@ const AdminPayments = () => {
                   <p>{selectedPayment.service}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Booking ID</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Booking ID
+                  </p>
                   <p>{selectedPayment.bookingId}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Status</p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusClass(selectedPayment.status)}`}>
-                    {selectedPayment.status.charAt(0).toUpperCase() + selectedPayment.status.slice(1)}
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusClass(selectedPayment.status)}`}
+                  >
+                    {selectedPayment.status.charAt(0).toUpperCase() +
+                      selectedPayment.status.slice(1)}
                   </span>
                 </div>
               </div>
@@ -543,20 +586,33 @@ const AdminPayments = () => {
       </Dialog>
 
       {/* Contact About Payment Dialog */}
-      <Dialog open={openDialog === "contactPayment"} onOpenChange={() => setOpenDialog(null)}>
+      <Dialog
+        open={openDialog === "contactPayment"}
+        onOpenChange={() => setOpenDialog(null)}
+      >
         <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Contact Client</DialogTitle>
           </DialogHeader>
           {selectedPayment && (
             <div className="space-y-4">
-              <p>Payment {selectedPayment.id} failed for client {selectedPayment.client}.</p>
-              <p>Send a notification to inform the client about the payment issue?</p>
+              <p>
+                Payment {selectedPayment.id} failed for client{" "}
+                {selectedPayment.client}.
+              </p>
+              <p>
+                Send a notification to inform the client about the payment
+                issue?
+              </p>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setOpenDialog(null)}>Cancel</Button>
-                <Button 
+                <Button variant="outline" onClick={() => setOpenDialog(null)}>
+                  Cancel
+                </Button>
+                <Button
                   onClick={() => {
-                    toast.success(`Notification sent to ${selectedPayment.client}`);
+                    toast.success(
+                      `Notification sent to ${selectedPayment.client}`,
+                    );
                     setOpenDialog(null);
                   }}
                 >
@@ -569,7 +625,10 @@ const AdminPayments = () => {
       </Dialog>
 
       {/* View Refund Dialog */}
-      <Dialog open={openDialog === "viewRefund"} onOpenChange={() => setOpenDialog(null)}>
+      <Dialog
+        open={openDialog === "viewRefund"}
+        onOpenChange={() => setOpenDialog(null)}
+      >
         <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Refund Details</DialogTitle>
@@ -594,13 +653,18 @@ const AdminPayments = () => {
                   <p>{selectedRefund.date}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Original Payment</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Original Payment
+                  </p>
                   <p>{selectedRefund.originalPayment}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Status</p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRefundStatusClass(selectedRefund.status)}`}>
-                    {selectedRefund.status.charAt(0).toUpperCase() + selectedRefund.status.slice(1)}
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRefundStatusClass(selectedRefund.status)}`}
+                  >
+                    {selectedRefund.status.charAt(0).toUpperCase() +
+                      selectedRefund.status.slice(1)}
                   </span>
                 </div>
                 <div className="col-span-2">
@@ -617,7 +681,10 @@ const AdminPayments = () => {
       </Dialog>
 
       {/* New Refund Dialog */}
-      <Dialog open={openDialog === "newRefund"} onOpenChange={() => setOpenDialog(null)}>
+      <Dialog
+        open={openDialog === "newRefund"}
+        onOpenChange={() => setOpenDialog(null)}
+      >
         <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Issue New Refund</DialogTitle>
@@ -625,52 +692,75 @@ const AdminPayments = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Original Payment ID</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border rounded-md" 
-                  placeholder="Enter payment ID" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Original Payment ID
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="Enter payment ID"
                   value={newRefund.paymentId}
-                  onChange={(e) => setNewRefund({...newRefund, paymentId: e.target.value})}
+                  onChange={(e) =>
+                    setNewRefund({ ...newRefund, paymentId: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border rounded-md" 
-                  placeholder="Client name" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Client Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="Client name"
                   value={newRefund.client}
-                  onChange={(e) => setNewRefund({...newRefund, client: e.target.value})}
+                  onChange={(e) =>
+                    setNewRefund({ ...newRefund, client: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Refund Amount</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border rounded-md" 
-                  placeholder="e.g. 900 EGP" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Refund Amount
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="e.g. 900 EGP"
                   value={newRefund.amount}
-                  onChange={(e) => setNewRefund({...newRefund, amount: e.target.value})}
+                  onChange={(e) =>
+                    setNewRefund({ ...newRefund, amount: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Refund</label>
-                <textarea 
-                  className="w-full p-2 border rounded-md" 
-                  rows={3} 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Reason for Refund
+                </label>
+                <textarea
+                  className="w-full p-2 border rounded-md"
+                  rows={3}
                   placeholder="Enter reason for refund"
                   value={newRefund.reason}
-                  onChange={(e) => setNewRefund({...newRefund, reason: e.target.value})}
+                  onChange={(e) =>
+                    setNewRefund({ ...newRefund, reason: e.target.value })
+                  }
                 ></textarea>
               </div>
             </div>
           </div>
           <DialogFooter className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={() => setOpenDialog(null)}>Cancel</Button>
-            <Button 
+            <Button variant="outline" onClick={() => setOpenDialog(null)}>
+              Cancel
+            </Button>
+            <Button
               onClick={handleSubmitNewRefund}
-              disabled={!newRefund.paymentId || !newRefund.client || !newRefund.amount || !newRefund.reason}
+              disabled={
+                !newRefund.paymentId ||
+                !newRefund.client ||
+                !newRefund.amount ||
+                !newRefund.reason
+              }
             >
               Issue Refund
             </Button>

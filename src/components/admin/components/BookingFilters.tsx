@@ -1,6 +1,11 @@
-
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, Calendar as CalendarIcon } from "lucide-react";
 
 interface BookingFiltersProps {
@@ -28,15 +33,18 @@ const BookingFilters = ({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        <Input 
-          placeholder="Search by client, date, service..." 
+        <Search
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          size={18}
+        />
+        <Input
+          placeholder="Search by client, date, service..."
           className="pl-10"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      
+
       {/* Status filter */}
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger>
@@ -65,12 +73,15 @@ const BookingFilters = ({
           <SelectItem value="refunded">Refunded</SelectItem>
         </SelectContent>
       </Select>
-      
+
       {/* Date filter */}
       <div className="relative">
-        <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        <Input 
-          type="date" 
+        <CalendarIcon
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          size={18}
+        />
+        <Input
+          type="date"
           className="pl-10"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}

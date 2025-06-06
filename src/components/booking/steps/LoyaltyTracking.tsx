@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BookingData } from "../BookingForm";
 import { Star, Gift, Crown } from "lucide-react";
@@ -9,7 +8,10 @@ interface LoyaltyTrackingProps {
   confirmationCode: string;
 }
 
-const LoyaltyTracking = ({ bookingData, confirmationCode }: LoyaltyTrackingProps) => {
+const LoyaltyTracking = ({
+  bookingData,
+  confirmationCode,
+}: LoyaltyTrackingProps) => {
   const [loyaltyPoints, setLoyaltyPoints] = useState(1);
   const [showCelebration, setShowCelebration] = useState(true);
 
@@ -23,7 +25,9 @@ const LoyaltyTracking = ({ bookingData, confirmationCode }: LoyaltyTrackingProps
         <div className="w-20 h-20 bg-gradient-to-r from-salon-purple to-pink-500 rounded-full flex items-center justify-center mb-4 mx-auto">
           <Crown className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-2xl font-playfair font-bold mb-2">GlamVan Loyalty Program</h2>
+        <h2 className="text-2xl font-playfair font-bold mb-2">
+          GlamVan Loyalty Program
+        </h2>
         <p className="text-gray-600">
           Congratulations! You've earned your first loyalty point! 🎉
         </p>
@@ -34,21 +38,24 @@ const LoyaltyTracking = ({ bookingData, confirmationCode }: LoyaltyTrackingProps
           <div className="flex items-center justify-center mb-4">
             <div className="flex items-center space-x-2">
               <Star className="w-6 h-6 text-yellow-500 fill-current" />
-              <span className="text-2xl font-bold text-salon-purple">{loyaltyPoints}/5</span>
+              <span className="text-2xl font-bold text-salon-purple">
+                {loyaltyPoints}/5
+              </span>
               <Gift className="w-6 h-6 text-salon-purple" />
             </div>
           </div>
-          
+
           <div className="text-center mb-4">
             <h3 className="font-medium text-lg mb-2">Your Loyalty Progress</h3>
             <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-              <div 
+              <div
                 className="bg-gradient-to-r from-salon-purple to-pink-500 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${(loyaltyPoints / 5) * 100}%` }}
               ></div>
             </div>
             <p className="text-sm text-gray-600">
-              Complete {5 - loyaltyPoints} more bookings to unlock 25% off your next service! ✨
+              Complete {5 - loyaltyPoints} more bookings to unlock 25% off your
+              next service! ✨
             </p>
           </div>
 
@@ -65,7 +72,7 @@ const LoyaltyTracking = ({ bookingData, confirmationCode }: LoyaltyTrackingProps
             <p className="text-xs text-gray-500 mb-3">
               Your loyalty points are linked to: {bookingData.email}
             </p>
-            <Button 
+            <Button
               onClick={handleContinue}
               className="bg-salon-purple hover:bg-salon-dark-purple"
             >
@@ -78,11 +85,13 @@ const LoyaltyTracking = ({ bookingData, confirmationCode }: LoyaltyTrackingProps
       {!showCelebration && (
         <div className="text-center">
           <p className="text-gray-600 mb-4">
-            Your loyalty point has been added to your account! Keep booking to earn your discount.
+            Your loyalty point has been added to your account! Keep booking to
+            earn your discount.
           </p>
           <div className="p-4 bg-salon-purple/5 rounded-lg">
             <p className="text-sm text-salon-purple">
-              <strong>Confirmation #{confirmationCode}</strong> - 1 Loyalty Point Earned ⭐
+              <strong>Confirmation #{confirmationCode}</strong> - 1 Loyalty
+              Point Earned ⭐
             </p>
           </div>
         </div>

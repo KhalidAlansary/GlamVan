@@ -1,4 +1,3 @@
-
 export interface Stylist {
   id: number;
   name: string;
@@ -14,11 +13,26 @@ export interface Stylist {
 }
 
 export const availableSpecialties = [
-  "Hair Styling", "Makeup", "Nails", "Lashes", "Bridal Makeup", 
-  "Hair Extensions", "Full Glam", "Hair Dye"
+  "Hair Styling",
+  "Makeup",
+  "Nails",
+  "Lashes",
+  "Bridal Makeup",
+  "Hair Extensions",
+  "Full Glam",
+  "Hair Dye",
 ];
-  
+
 export const availableZones = [
-  "Maadi", "Heliopolis", "Zamalek", "New Cairo", "6th October", 
-  "Nasr City", "Downtown", "Dokki", "Mohandessin", "Giza", "El-Rehab City"
+  "Maadi",
+  "Heliopolis",
+  "Zamalek",
+  "New Cairo",
+  "6th October",
+  "Nasr City",
+  "Downtown",
+  "Dokki",
+  "Mohandessin",
+  "Giza",
+  "El-Rehab City",
 ];

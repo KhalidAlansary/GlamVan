@@ -1,29 +1,60 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Truck, Calendar, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { vans as initialVans, getAvailableVanForLocation, Van } from "@/data/vans";
+import {
+  vans as initialVans,
+  getAvailableVanForLocation,
+  Van,
+} from "@/data/vans";
 
-const CAIRO_LOCATIONS = [
-  "El Rehab",
-  "New Cairo",
-  "Sheikh Zayed",
-  "Tagmo3"
-];
+const CAIRO_LOCATIONS = ["El Rehab", "New Cairo", "Sheikh Zayed", "Tagmo3"];
 
 const SERVICES = [
   "Bridal Makeup",
   "Hair & Nails",
   "Full Glam Package",
   "Basic Makeup",
-  "Hair Styling"
+  "Hair Styling",
 ];
 
 const AdminVans = () => {
@@ -37,7 +68,7 @@ const AdminVans = () => {
   const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
 
   const [vans, setVans] = useState(initialVans);
-  
+
   const [vanAssignments, setVanAssignments] = useState([
     {
       id: "VA-1001",
@@ -49,7 +80,7 @@ const AdminVans = () => {
       date: "May 2, 2025",
       time: "10:00 AM",
       location: "El Rehab",
-      status: "confirmed"
+      status: "confirmed",
     },
     {
       id: "VA-1002",
@@ -61,7 +92,7 @@ const AdminVans = () => {
       date: "May 3, 2025",
       time: "2:30 PM",
       location: "Sheikh Zayed",
-      status: "confirmed"
+      status: "confirmed",
     },
     {
       id: "VA-1003",
@@ -73,8 +104,8 @@ const AdminVans = () => {
       date: "May 4, 2025",
       time: "11:15 AM",
       location: "New Cairo",
-      status: "needs assignment"
-    }
+      status: "needs assignment",
+    },
   ]);
 
   const assignForm = useForm();
@@ -87,15 +118,15 @@ const AdminVans = () => {
       service: "",
       date: "",
       time: "",
-      location: ""
-    }
+      location: "",
+    },
   });
 
   const handleManualBooking = (data) => {
     const newBookingId = `BK-${1000 + vanAssignments.length}`;
-    
+
     const availableVan = getAvailableVanForLocation(data.location);
-    
+
     const newAssignment = {
       id: `VA-${1004 + vanAssignments.length - 3}`,
       bookingId: newBookingId,
@@ -106,170 +137,195 @@ const AdminVans = () => {
       date: data.date,
       time: data.time,
       location: data.location,
-      status: availableVan ? "confirmed" : "needs assignment"
+      status: availableVan ? "confirmed" : "needs assignment",
     };
-    
-    setVanAssignments(prev => [...prev, newAssignment]);
-    
+
+    setVanAssignments((prev) => [...prev, newAssignment]);
+
     if (availableVan) {
-      toast.success(`Manual booking ${newBookingId} created and automatically assigned to ${availableVan.name}`);
+      toast.success(
+        `Manual booking ${newBookingId} created and automatically assigned to ${availableVan.name}`,
+      );
     } else {
-      toast.success(`Manual booking ${newBookingId} created - no vans available for automatic assignment`);
+      toast.success(
+        `Manual booking ${newBookingId} created - no vans available for automatic assignment`,
+      );
     }
-    
+
     setIsManualBookingOpen(false);
     manualBookingForm.reset();
   };
 
   const handleAssignVan = (assignment, vanId) => {
-    const selectedVan = vans.find(van => van.id === vanId);
-    
+    const selectedVan = vans.find((van) => van.id === vanId);
+
     if (!selectedVan) {
       toast.error("Please select a van first");
       return;
     }
-    
-    setVanAssignments(prev => prev.map(a => {
-      if (a.id === assignment.id) {
-        return {
-          ...a,
-          vanId: selectedVan.id,
-          vanName: selectedVan.name,
-          status: "confirmed"
-        };
-      }
-      return a;
-    }));
-    
-    toast.success(`Van ${selectedVan.name} assigned to booking ${assignment.bookingId}`);
+
+    setVanAssignments((prev) =>
+      prev.map((a) => {
+        if (a.id === assignment.id) {
+          return {
+            ...a,
+            vanId: selectedVan.id,
+            vanName: selectedVan.name,
+            status: "confirmed",
+          };
+        }
+        return a;
+      }),
+    );
+
+    toast.success(
+      `Van ${selectedVan.name} assigned to booking ${assignment.bookingId}`,
+    );
     setIsAssignDialogOpen(false);
   };
 
   const handleUnassignVan = (assignment) => {
-    setVanAssignments(prev => prev.map(a => {
-      if (a.id === assignment.id) {
-        return {
-          ...a,
-          vanId: null,
-          vanName: null,
-          status: "needs assignment"
-        };
-      }
-      return a;
-    }));
-    
+    setVanAssignments((prev) =>
+      prev.map((a) => {
+        if (a.id === assignment.id) {
+          return {
+            ...a,
+            vanId: null,
+            vanName: null,
+            status: "needs assignment",
+          };
+        }
+        return a;
+      }),
+    );
+
     toast.success(`Van unassigned from booking ${assignment.bookingId}`);
   };
 
   const handleEditVan = (data) => {
     if (!currentVan) return;
-    
-    setVans(prev => prev.map(van => {
-      if (van.id === currentVan.id) {
-        return {
-          ...van,
-          name: data.name,
-          driver: data.driver,
-          location: data.location,
-          capacity: data.capacity
-        };
-      }
-      return van;
-    }));
-    
+
+    setVans((prev) =>
+      prev.map((van) => {
+        if (van.id === currentVan.id) {
+          return {
+            ...van,
+            name: data.name,
+            driver: data.driver,
+            location: data.location,
+            capacity: data.capacity,
+          };
+        }
+        return van;
+      }),
+    );
+
     setIsEditVanOpen(false);
     toast.success(`Van ${data.name} updated successfully`);
   };
 
   const handleAddVan = () => {
     const nameInput = document.getElementById("vanName") as HTMLInputElement;
-    const driverInput = document.getElementById("driverName") as HTMLInputElement;
-    
+    const driverInput = document.getElementById(
+      "driverName",
+    ) as HTMLInputElement;
+
     if (!nameInput || !driverInput) {
       toast.error("Form inputs not found");
       return;
     }
-    
+
     const name = nameInput.value;
     const driver = driverInput.value;
-    
+
     if (!name) {
       toast.error("Van name is required");
       return;
     }
-    
+
     const newVan: Van = {
       id: `VAN-00${vans.length + 1}`,
       name,
       driver: driver || "Not assigned",
       status: "available" as const,
       location: "New Cairo",
-      lastService: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      lastService: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
-      capacity: "4 stylists"
+      capacity: "4 stylists",
     };
-    
-    setVans(prev => [...prev, newVan]);
+
+    setVans((prev) => [...prev, newVan]);
     toast.success(`New van ${name} added to fleet`);
-    
+
     nameInput.value = "";
     driverInput.value = "";
   };
 
   const handleRemoveVan = (vanId) => {
-    const isAssigned = vanAssignments.some(assignment => assignment.vanId === vanId);
-    
+    const isAssigned = vanAssignments.some(
+      (assignment) => assignment.vanId === vanId,
+    );
+
     if (isAssigned) {
       toast.error("Cannot remove van that is currently assigned to bookings");
       return;
     }
-    
-    setVans(prev => prev.filter(van => van.id !== vanId));
+
+    setVans((prev) => prev.filter((van) => van.id !== vanId));
     toast.success("Van removed from fleet");
   };
 
   const handleScheduleService = (data) => {
     if (!currentVan) return;
-    
+
     const nextServiceDate = data.serviceDate;
-    
-    setVans(prev => prev.map(van => {
-      if (van.id === currentVan.id) {
-        return {
-          ...van,
-          status: van.status === "maintenance" ? "available" : van.status
-        };
-      }
-      return van;
-    }));
-    
+
+    setVans((prev) =>
+      prev.map((van) => {
+        if (van.id === currentVan.id) {
+          return {
+            ...van,
+            status: van.status === "maintenance" ? "available" : van.status,
+          };
+        }
+        return van;
+      }),
+    );
+
     setIsServiceDialogOpen(false);
-    toast.success(`Next service scheduled for ${currentVan.name} on ${nextServiceDate}`);
+    toast.success(
+      `Next service scheduled for ${currentVan.name} on ${nextServiceDate}`,
+    );
   };
 
   const handleMarkForService = (vanId) => {
     const isAssigned = vanAssignments.some(
-      assignment => assignment.vanId === vanId && assignment.status === "confirmed"
+      (assignment) =>
+        assignment.vanId === vanId && assignment.status === "confirmed",
     );
-    
+
     if (isAssigned) {
-      toast.error("Cannot mark van for service while it has upcoming assignments");
+      toast.error(
+        "Cannot mark van for service while it has upcoming assignments",
+      );
       return;
     }
-    
-    setVans(prev => prev.map(van => {
-      if (van.id === vanId) {
-        return {
-          ...van,
-          status: "maintenance"
-        };
-      }
-      return van;
-    }));
-    
+
+    setVans((prev) =>
+      prev.map((van) => {
+        if (van.id === vanId) {
+          return {
+            ...van,
+            status: "maintenance",
+          };
+        }
+        return van;
+      }),
+    );
+
     toast.success("Van marked for maintenance");
   };
 
@@ -283,26 +339,28 @@ const AdminVans = () => {
     modifyForm.reset({
       location: assignment.location,
       date: assignment.date,
-      time: assignment.time
+      time: assignment.time,
     });
     setIsModifyDialogOpen(true);
   };
 
   const handleModifyAssignment = (data) => {
     if (!currentAssignment) return;
-    
-    setVanAssignments(prev => prev.map(a => {
-      if (a.id === currentAssignment.id) {
-        return {
-          ...a,
-          location: data.location,
-          date: data.date,
-          time: data.time
-        };
-      }
-      return a;
-    }));
-    
+
+    setVanAssignments((prev) =>
+      prev.map((a) => {
+        if (a.id === currentAssignment.id) {
+          return {
+            ...a,
+            location: data.location,
+            date: data.date,
+            time: data.time,
+          };
+        }
+        return a;
+      }),
+    );
+
     setIsModifyDialogOpen(false);
     toast.success(`Assignment ${currentAssignment.id} updated`);
   };
@@ -313,7 +371,7 @@ const AdminVans = () => {
       name: van.name,
       driver: van.driver,
       location: van.location,
-      capacity: van.capacity
+      capacity: van.capacity,
     });
     setIsEditVanOpen(true);
   };
@@ -322,41 +380,43 @@ const AdminVans = () => {
     setCurrentVan(van);
     const nextServiceDate = new Date();
     nextServiceDate.setMonth(nextServiceDate.getMonth() + 3);
-    
+
     serviceForm.reset({
-      serviceDate: nextServiceDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
+      serviceDate: nextServiceDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
     });
-    
+
     setIsServiceDialogOpen(true);
   };
 
   const handleCompleteMaintenance = (vanId) => {
-    setVans(prev => prev.map(van => {
-      if (van.id === vanId && van.status === "maintenance") {
-        const today = new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-        
-        return {
-          ...van,
-          status: "available",
-          lastService: today
-        };
-      }
-      return van;
-    }));
-    
+    setVans((prev) =>
+      prev.map((van) => {
+        if (van.id === vanId && van.status === "maintenance") {
+          const today = new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+          return {
+            ...van,
+            status: "available",
+            lastService: today,
+          };
+        }
+        return van;
+      }),
+    );
+
     toast.success("Maintenance completed. Van is now available.");
   };
-  
+
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case "available":
         return "bg-green-100 text-green-800";
       case "assigned":
@@ -371,49 +431,51 @@ const AdminVans = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Van Management</h1>
       </div>
-      
+
       <div className="flex space-x-1 border-b">
-        <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'assignments' ? 'border-b-2 border-salon-purple text-salon-purple' : 'text-gray-600'}`}
-          onClick={() => setActiveTab('assignments')}
+        <button
+          className={`px-4 py-2 font-medium ${activeTab === "assignments" ? "border-b-2 border-salon-purple text-salon-purple" : "text-gray-600"}`}
+          onClick={() => setActiveTab("assignments")}
         >
           Van Assignments
         </button>
-        <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'fleet' ? 'border-b-2 border-salon-purple text-salon-purple' : 'text-gray-600'}`}
-          onClick={() => setActiveTab('fleet')}
+        <button
+          className={`px-4 py-2 font-medium ${activeTab === "fleet" ? "border-b-2 border-salon-purple text-salon-purple" : "text-gray-600"}`}
+          onClick={() => setActiveTab("fleet")}
         >
           Fleet Management
         </button>
-        <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'maintenance' ? 'border-b-2 border-salon-purple text-salon-purple' : 'text-gray-600'}`}
-          onClick={() => setActiveTab('maintenance')}
+        <button
+          className={`px-4 py-2 font-medium ${activeTab === "maintenance" ? "border-b-2 border-salon-purple text-salon-purple" : "text-gray-600"}`}
+          onClick={() => setActiveTab("maintenance")}
         >
           Maintenance Schedule
         </button>
       </div>
-      
-      {activeTab === 'assignments' && (
+
+      {activeTab === "assignments" && (
         <>
           <div className="flex justify-end mb-4">
-            <Button 
+            <Button
               className="bg-salon-purple hover:bg-salon-dark-purple"
               onClick={() => setIsManualBookingOpen(true)}
             >
               Create Manual Booking
             </Button>
           </div>
-          
+
           <Card className="border-none shadow-md">
             <CardHeader>
               <CardTitle>Pending Van Assignments</CardTitle>
-              <CardDescription>Assign vans to upcoming bookings</CardDescription>
+              <CardDescription>
+                Assign vans to upcoming bookings
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -430,48 +492,69 @@ const AdminVans = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vanAssignments.filter(a => a.status === "needs assignment").map((assignment) => (
-                      <TableRow key={assignment.id}>
-                        <TableCell className="font-medium">{assignment.bookingId}</TableCell>
-                        <TableCell>{assignment.client}</TableCell>
-                        <TableCell>
-                          {assignment.date}<br/>
-                          <span className="text-gray-500 text-sm">{assignment.time}</span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <MapPin size={14} className="mr-1 text-gray-400" />
-                            {assignment.location}
-                          </div>
-                        </TableCell>
-                        <TableCell>{assignment.service}</TableCell>
-                        <TableCell>
-                          <Select onValueChange={(value) => {
-                            handleAssignVan(assignment, value);
-                          }}>
-                            <SelectTrigger className="w-36">
-                              <SelectValue placeholder="Select Van" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {vans.filter(v => v.status === "available").map(van => (
-                                <SelectItem key={van.id} value={van.id}>{van.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Button 
-                            size="sm"
-                            onClick={() => openAssignDialog(assignment)}
-                          >
-                            Assign
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {vanAssignments.filter(a => a.status === "needs assignment").length === 0 && (
+                    {vanAssignments
+                      .filter((a) => a.status === "needs assignment")
+                      .map((assignment) => (
+                        <TableRow key={assignment.id}>
+                          <TableCell className="font-medium">
+                            {assignment.bookingId}
+                          </TableCell>
+                          <TableCell>{assignment.client}</TableCell>
+                          <TableCell>
+                            {assignment.date}
+                            <br />
+                            <span className="text-gray-500 text-sm">
+                              {assignment.time}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <MapPin
+                                size={14}
+                                className="mr-1 text-gray-400"
+                              />
+                              {assignment.location}
+                            </div>
+                          </TableCell>
+                          <TableCell>{assignment.service}</TableCell>
+                          <TableCell>
+                            <Select
+                              onValueChange={(value) => {
+                                handleAssignVan(assignment, value);
+                              }}
+                            >
+                              <SelectTrigger className="w-36">
+                                <SelectValue placeholder="Select Van" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {vans
+                                  .filter((v) => v.status === "available")
+                                  .map((van) => (
+                                    <SelectItem key={van.id} value={van.id}>
+                                      {van.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => openAssignDialog(assignment)}
+                            >
+                              Assign
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {vanAssignments.filter(
+                      (a) => a.status === "needs assignment",
+                    ).length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                        <TableCell
+                          colSpan={7}
+                          className="text-center py-4 text-gray-500"
+                        >
                           No pending assignments
                         </TableCell>
                       </TableRow>
@@ -481,7 +564,7 @@ const AdminVans = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border-none shadow-md">
             <CardHeader>
               <CardTitle>Current Van Assignments</CardTitle>
@@ -504,42 +587,58 @@ const AdminVans = () => {
                   <TableBody>
                     {vanAssignments.map((assignment) => (
                       <TableRow key={assignment.id}>
-                        <TableCell className="font-medium">{assignment.id}</TableCell>
+                        <TableCell className="font-medium">
+                          {assignment.id}
+                        </TableCell>
                         <TableCell>
-                          {assignment.bookingId}<br/>
-                          <span className="text-xs text-gray-500">{assignment.client}</span>
+                          {assignment.bookingId}
+                          <br />
+                          <span className="text-xs text-gray-500">
+                            {assignment.client}
+                          </span>
                         </TableCell>
                         <TableCell>
                           {assignment.vanName || "Not assigned"}
                         </TableCell>
                         <TableCell>
-                          {assignment.date}<br/>
-                          <span className="text-gray-500 text-sm">{assignment.time}</span>
+                          {assignment.date}
+                          <br />
+                          <span className="text-gray-500 text-sm">
+                            {assignment.time}
+                          </span>
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">
                           <div className="flex items-center">
-                            <MapPin size={14} className="mr-1 text-gray-400 shrink-0" />
-                            <span className="truncate">{assignment.location}</span>
+                            <MapPin
+                              size={14}
+                              className="mr-1 text-gray-400 shrink-0"
+                            />
+                            <span className="truncate">
+                              {assignment.location}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(assignment.status)}`}>
-                            {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(assignment.status)}`}
+                          >
+                            {assignment.status.charAt(0).toUpperCase() +
+                              assignment.status.slice(1)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => openModifyDialog(assignment)}
                             >
                               Modify
                             </Button>
                             {assignment.status !== "needs assignment" && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-red-600 hover:text-red-700"
                                 onClick={() => handleUnassignVan(assignment)}
                               >
@@ -557,12 +656,14 @@ const AdminVans = () => {
           </Card>
         </>
       )}
-      
-      {activeTab === 'fleet' && (
+
+      {activeTab === "fleet" && (
         <Card className="border-none shadow-md">
           <CardHeader>
             <CardTitle>Fleet Management</CardTitle>
-            <CardDescription>Manage your fleet of mobile salon vans</CardDescription>
+            <CardDescription>
+              Manage your fleet of mobile salon vans
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -597,22 +698,25 @@ const AdminVans = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(van.status)}`}>
-                          {van.status.charAt(0).toUpperCase() + van.status.slice(1)}
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(van.status)}`}
+                        >
+                          {van.status.charAt(0).toUpperCase() +
+                            van.status.slice(1)}
                         </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => openEditVanDialog(van)}
                           >
                             Edit
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="text-red-600 hover:text-red-700"
                             onClick={() => handleRemoveVan(van.id)}
                           >
@@ -625,16 +729,13 @@ const AdminVans = () => {
                 </TableBody>
               </Table>
             </div>
-            
+
             <div className="mt-6">
               <h3 className="font-medium mb-2">Add New Van</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input placeholder="Van Name" id="vanName" />
                 <Input placeholder="Driver Name (Female)" id="driverName" />
-                <Button 
-                  className="bg-salon-purple"
-                  onClick={handleAddVan}
-                >
+                <Button className="bg-salon-purple" onClick={handleAddVan}>
                   Add Van
                 </Button>
               </div>
@@ -645,12 +746,14 @@ const AdminVans = () => {
           </CardContent>
         </Card>
       )}
-      
-      {activeTab === 'maintenance' && (
+
+      {activeTab === "maintenance" && (
         <Card className="border-none shadow-md">
           <CardHeader>
             <CardTitle>Maintenance Schedule</CardTitle>
-            <CardDescription>Track and schedule van maintenance</CardDescription>
+            <CardDescription>
+              Track and schedule van maintenance
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -669,61 +772,79 @@ const AdminVans = () => {
                     const lastServiceDate = new Date(van.lastService);
                     const nextServiceDate = new Date(lastServiceDate);
                     nextServiceDate.setMonth(lastServiceDate.getMonth() + 3);
-                    const nextService = nextServiceDate.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    });
-                    
+                    const nextService = nextServiceDate.toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      },
+                    );
+
                     return (
                       <TableRow key={van.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center">
-                            <Truck size={16} className="mr-2 text-salon-purple" />
+                            <Truck
+                              size={16}
+                              className="mr-2 text-salon-purple"
+                            />
                             {van.name}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <Calendar size={14} className="mr-1 text-gray-400" />
+                            <Calendar
+                              size={14}
+                              className="mr-1 text-gray-400"
+                            />
                             {van.lastService}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <Calendar size={14} className="mr-1 text-gray-400" />
+                            <Calendar
+                              size={14}
+                              className="mr-1 text-gray-400"
+                            />
                             {nextService}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${van.status === 'maintenance' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                            {van.status === 'maintenance' ? 'In Maintenance' : 'Operational'}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${van.status === "maintenance" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
+                          >
+                            {van.status === "maintenance"
+                              ? "In Maintenance"
+                              : "Operational"}
                           </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => openServiceDialog(van)}
                             >
                               Schedule Service
                             </Button>
-                            {van.status !== 'maintenance' ? (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                            {van.status !== "maintenance" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-yellow-600"
                                 onClick={() => handleMarkForService(van.id)}
                               >
                                 Mark for Service
                               </Button>
                             ) : (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-green-600"
-                                onClick={() => handleCompleteMaintenance(van.id)}
+                                onClick={() =>
+                                  handleCompleteMaintenance(van.id)
+                                }
                               >
                                 Complete Maintenance
                               </Button>
@@ -739,7 +860,7 @@ const AdminVans = () => {
           </CardContent>
         </Card>
       )}
-      
+
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -748,20 +869,24 @@ const AdminVans = () => {
               Select a van to assign to this booking
             </DialogDescription>
           </DialogHeader>
-          
+
           {currentAssignment && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2 col-span-4">
                   <h4 className="font-medium">Booking Details</h4>
                   <p className="text-sm text-gray-500">
-                    <strong>Client:</strong> {currentAssignment.client}<br />
-                    <strong>Service:</strong> {currentAssignment.service}<br />
-                    <strong>Date:</strong> {currentAssignment.date} at {currentAssignment.time}<br />
+                    <strong>Client:</strong> {currentAssignment.client}
+                    <br />
+                    <strong>Service:</strong> {currentAssignment.service}
+                    <br />
+                    <strong>Date:</strong> {currentAssignment.date} at{" "}
+                    {currentAssignment.time}
+                    <br />
                     <strong>Location:</strong> {currentAssignment.location}
                   </p>
                 </div>
-                
+
                 <div className="col-span-4">
                   <Form {...assignForm}>
                     <form className="space-y-4">
@@ -770,7 +895,7 @@ const AdminVans = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Select Van</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={(value) => {
                                 field.onChange(value);
                               }}
@@ -781,9 +906,13 @@ const AdminVans = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {vans.filter(v => v.status === "available").map(van => (
-                                  <SelectItem key={van.id} value={van.id}>{van.name}</SelectItem>
-                                ))}
+                                {vans
+                                  .filter((v) => v.status === "available")
+                                  .map((van) => (
+                                    <SelectItem key={van.id} value={van.id}>
+                                      {van.name}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -795,15 +924,15 @@ const AdminVans = () => {
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsAssignDialogOpen(false)}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 const formValues = assignForm.getValues();
                 if (currentAssignment) {
@@ -817,7 +946,7 @@ const AdminVans = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isEditVanOpen} onOpenChange={setIsEditVanOpen}>
         <DialogContent>
           <DialogHeader>
@@ -826,10 +955,13 @@ const AdminVans = () => {
               Update the information for this van
             </DialogDescription>
           </DialogHeader>
-          
+
           {currentVan && (
             <Form {...editVanForm}>
-              <form className="space-y-4" onSubmit={editVanForm.handleSubmit(handleEditVan)}>
+              <form
+                className="space-y-4"
+                onSubmit={editVanForm.handleSubmit(handleEditVan)}
+              >
                 <FormField
                   control={editVanForm.control}
                   name="name"
@@ -842,7 +974,7 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editVanForm.control}
                   name="driver"
@@ -855,15 +987,15 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editVanForm.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Current Location</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -872,7 +1004,7 @@ const AdminVans = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CAIRO_LOCATIONS.map(location => (
+                          {CAIRO_LOCATIONS.map((location) => (
                             <SelectItem key={location} value={location}>
                               {location}
                             </SelectItem>
@@ -882,7 +1014,7 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editVanForm.control}
                   name="capacity"
@@ -895,25 +1027,23 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <DialogFooter>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setIsEditVanOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    Save Changes
-                  </Button>
+                  <Button type="submit">Save Changes</Button>
                 </DialogFooter>
               </form>
             </Form>
           )}
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -922,10 +1052,13 @@ const AdminVans = () => {
               Set next service date for this van
             </DialogDescription>
           </DialogHeader>
-          
+
           {currentVan && (
             <Form {...serviceForm}>
-              <form className="space-y-4" onSubmit={serviceForm.handleSubmit(handleScheduleService)}>
+              <form
+                className="space-y-4"
+                onSubmit={serviceForm.handleSubmit(handleScheduleService)}
+              >
                 <FormField
                   control={serviceForm.control}
                   name="serviceDate"
@@ -938,25 +1071,23 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <DialogFooter>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setIsServiceDialogOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    Schedule Service
-                  </Button>
+                  <Button type="submit">Schedule Service</Button>
                 </DialogFooter>
               </form>
             </Form>
           )}
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isModifyDialogOpen} onOpenChange={setIsModifyDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -965,18 +1096,21 @@ const AdminVans = () => {
               Update the details for this assignment
             </DialogDescription>
           </DialogHeader>
-          
+
           {currentAssignment && (
             <Form {...modifyForm}>
-              <form className="space-y-4" onSubmit={modifyForm.handleSubmit(handleModifyAssignment)}>
+              <form
+                className="space-y-4"
+                onSubmit={modifyForm.handleSubmit(handleModifyAssignment)}
+              >
                 <FormField
                   control={modifyForm.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Location</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -985,7 +1119,7 @@ const AdminVans = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CAIRO_LOCATIONS.map(location => (
+                          {CAIRO_LOCATIONS.map((location) => (
                             <SelectItem key={location} value={location}>
                               {location}
                             </SelectItem>
@@ -995,7 +1129,7 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={modifyForm.control}
                   name="date"
@@ -1008,7 +1142,7 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={modifyForm.control}
                   name="time"
@@ -1021,25 +1155,23 @@ const AdminVans = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <DialogFooter>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setIsModifyDialogOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    Save Changes
-                  </Button>
+                  <Button type="submit">Save Changes</Button>
                 </DialogFooter>
               </form>
             </Form>
           )}
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isManualBookingOpen} onOpenChange={setIsManualBookingOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1048,9 +1180,12 @@ const AdminVans = () => {
               Enter booking details for a customer
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...manualBookingForm}>
-            <form className="space-y-4" onSubmit={manualBookingForm.handleSubmit(handleManualBooking)}>
+            <form
+              className="space-y-4"
+              onSubmit={manualBookingForm.handleSubmit(handleManualBooking)}
+            >
               <FormField
                 control={manualBookingForm.control}
                 name="client"
@@ -1063,14 +1198,14 @@ const AdminVans = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={manualBookingForm.control}
                 name="service"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service</FormLabel>
-                    <Select 
+                    <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
@@ -1080,15 +1215,17 @@ const AdminVans = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {SERVICES.map(service => (
-                          <SelectItem key={service} value={service}>{service}</SelectItem>
+                        {SERVICES.map((service) => (
+                          <SelectItem key={service} value={service}>
+                            {service}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={manualBookingForm.control}
                 name="date"
@@ -1101,7 +1238,7 @@ const AdminVans = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={manualBookingForm.control}
                 name="time"
@@ -1114,14 +1251,14 @@ const AdminVans = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={manualBookingForm.control}
                 name="location"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location</FormLabel>
-                    <Select 
+                    <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
@@ -1131,26 +1268,26 @@ const AdminVans = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CAIRO_LOCATIONS.map(location => (
-                          <SelectItem key={location} value={location}>{location}</SelectItem>
+                        {CAIRO_LOCATIONS.map((location) => (
+                          <SelectItem key={location} value={location}>
+                            {location}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsManualBookingOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Create Booking
-                </Button>
+                <Button type="submit">Create Booking</Button>
               </DialogFooter>
             </form>
           </Form>

@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Bell, User, LogOut } from "lucide-react";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -40,43 +39,45 @@ const BeauticianNavbar = () => {
       message: "Your earnings have been transferred to your account",
       time: "Yesterday",
       read: true,
-    }
+    },
   ]);
   const [hasUnread, setHasUnread] = useState(true);
-  
+
   useEffect(() => {
     // Check if there are any unread notifications
-    setHasUnread(notifications.some(notification => !notification.read));
+    setHasUnread(notifications.some((notification) => !notification.read));
   }, [notifications]);
-  
+
   const handleLogout = () => {
     logout();
     navigate("/");
   };
-  
+
   const handleReadNotification = (id: string) => {
     setNotifications(
       notifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
+        notification.id === id ? { ...notification, read: true } : notification,
+      ),
     );
   };
-  
+
   const handleReadAll = () => {
     setNotifications(
-      notifications.map((notification) => ({ ...notification, read: true }))
+      notifications.map((notification) => ({ ...notification, read: true })),
     );
     toast.success("All notifications marked as read");
   };
 
   // Use a default name if user is not available
-  const userName = user?.name || 'Layla Mohammed';
+  const userName = user?.name || "Layla Mohammed";
 
   return (
     <header className="bg-white shadow-sm py-4">
       <div className="container mx-auto px-4 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <span className="text-3xl font-bold text-salon-purple">Beautician Dashboard</span>
+          <span className="text-3xl font-bold text-salon-purple">
+            Beautician Dashboard
+          </span>
         </Link>
 
         <div className="flex items-center gap-4">
@@ -92,10 +93,10 @@ const BeauticianNavbar = () => {
             <DropdownMenuContent align="end" className="w-80">
               <div className="flex justify-between items-center p-2 border-b">
                 <h3 className="font-medium">Notifications</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleReadAll} 
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleReadAll}
                   className="text-xs hover:text-salon-purple"
                 >
                   Mark all as read
@@ -104,16 +105,20 @@ const BeauticianNavbar = () => {
               {notifications.length > 0 ? (
                 <div className="max-h-[300px] overflow-y-auto">
                   {notifications.map((notification) => (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       key={notification.id}
-                      className={`p-3 cursor-pointer ${!notification.read ? 'bg-salon-pink/10' : ''}`}
+                      className={`p-3 cursor-pointer ${!notification.read ? "bg-salon-pink/10" : ""}`}
                       onClick={() => handleReadNotification(notification.id)}
                     >
                       <div>
-                        <p className={`text-sm ${!notification.read ? 'font-medium' : ''}`}>
+                        <p
+                          className={`text-sm ${!notification.read ? "font-medium" : ""}`}
+                        >
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {notification.time}
+                        </p>
                       </div>
                     </DropdownMenuItem>
                   ))}

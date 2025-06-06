@@ -1,6 +1,21 @@
-
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, CreditCard, DollarSign, Users, Truck, Percent, Tag, MapPin } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Calendar,
+  CreditCard,
+  DollarSign,
+  Users,
+  Truck,
+  Percent,
+  Tag,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -13,7 +28,7 @@ const AdminDashboard = () => {
       change: "+12% from last month",
       icon: <Calendar className="h-8 w-8 text-salon-purple" />,
       background: "bg-salon-pink/10",
-      linkTo: "/admin/bookings"
+      linkTo: "/admin/bookings",
     },
     {
       title: "Active Beauticians",
@@ -21,7 +36,7 @@ const AdminDashboard = () => {
       change: "+2 this month",
       icon: <Users className="h-8 w-8 text-salon-purple" />,
       background: "bg-salon-pink/10",
-      linkTo: "/admin/stylists"
+      linkTo: "/admin/stylists",
     },
     {
       title: "Revenue",
@@ -29,7 +44,7 @@ const AdminDashboard = () => {
       change: "+18% from last month",
       icon: <DollarSign className="h-8 w-8 text-salon-purple" />,
       background: "bg-salon-pink/10",
-      linkTo: "/admin/payments"
+      linkTo: "/admin/payments",
     },
     {
       title: "Active Discounts",
@@ -37,8 +52,8 @@ const AdminDashboard = () => {
       change: "50+ redemptions",
       icon: <Percent className="h-8 w-8 text-salon-purple" />,
       background: "bg-salon-pink/10",
-      linkTo: "/admin/promotions"
-    }
+      linkTo: "/admin/promotions",
+    },
   ];
 
   // Mock upcoming bookings with location information
@@ -53,7 +68,7 @@ const AdminDashboard = () => {
       status: "confirmed",
       vanAssigned: true,
       van: "GlamVanLuxury",
-      location: "New Cairo, Rehab City"
+      location: "New Cairo, Rehab City",
     },
     {
       id: "BK-1235",
@@ -65,7 +80,7 @@ const AdminDashboard = () => {
       status: "confirmed",
       vanAssigned: false,
       van: null,
-      location: "Cairo, Maadi"
+      location: "Cairo, Maadi",
     },
     {
       id: "BK-1236",
@@ -77,28 +92,31 @@ const AdminDashboard = () => {
       status: "pending",
       vanAssigned: true,
       van: "GlamVanLuxury",
-      location: "Giza, Sheikh Zayed"
-    }
+      location: "Giza, Sheikh Zayed",
+    },
   ];
 
   // Mock van assignments needed
   const vanAssignmentsNeeded = 2;
-  
+
   // Mock contracts needing approval
   const contractsNeedingApproval = 1;
-  
+
   // Mock pending promotions
   const pendingPromotions = 2;
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-      
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => (
           <Link to={stat.linkTo} key={index} className="block">
-            <Card key={index} className="border-none shadow-md hover:shadow-lg transition-shadow h-full">
+            <Card
+              key={index}
+              className="border-none shadow-md hover:shadow-lg transition-shadow h-full"
+            >
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-sm font-medium text-gray-500">
@@ -129,7 +147,8 @@ const AdminDashboard = () => {
                   Van Assignments Required
                 </CardTitle>
                 <CardDescription>
-                  {vanAssignmentsNeeded} bookings need van assignments for upcoming appointments
+                  {vanAssignmentsNeeded} bookings need van assignments for
+                  upcoming appointments
                 </CardDescription>
               </div>
               <Button asChild>
@@ -144,7 +163,9 @@ const AdminDashboard = () => {
       <Card className="border-none shadow-md">
         <CardHeader>
           <CardTitle>Upcoming Bookings</CardTitle>
-          <CardDescription>Recently scheduled appointments that need attention</CardDescription>
+          <CardDescription>
+            Recently scheduled appointments that need attention
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -167,15 +188,9 @@ const AdminDashboard = () => {
                     <td className="px-4 py-4 text-sm font-medium">
                       {booking.id}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      {booking.client}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {booking.service}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {booking.stylist}
-                    </td>
+                    <td className="px-4 py-4 text-sm">{booking.client}</td>
+                    <td className="px-4 py-4 text-sm">{booking.service}</td>
+                    <td className="px-4 py-4 text-sm">{booking.stylist}</td>
                     <td className="px-4 py-4 text-sm">
                       {booking.date} at {booking.time}
                     </td>
@@ -198,12 +213,16 @@ const AdminDashboard = () => {
                       )}
                     </td>
                     <td className="px-4 py-4 text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        booking.status === 'confirmed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {booking.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          booking.status === "confirmed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {booking.status === "confirmed"
+                          ? "Confirmed"
+                          : "Pending"}
                       </span>
                     </td>
                   </tr>
@@ -213,7 +232,12 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Link to="/admin/bookings" className="text-salon-purple hover:underline text-sm">View all bookings →</Link>
+          <Link
+            to="/admin/bookings"
+            className="text-salon-purple hover:underline text-sm"
+          >
+            View all bookings →
+          </Link>
         </CardFooter>
       </Card>
 
@@ -228,10 +252,17 @@ const AdminDashboard = () => {
             <CardDescription>Assign van to upcoming bookings</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">{vanAssignmentsNeeded} bookings need van assignment</p>
+            <p className="text-sm text-gray-500">
+              {vanAssignmentsNeeded} bookings need van assignment
+            </p>
           </CardContent>
           <CardFooter>
-            <Link to="/admin/vans" className="text-salon-purple hover:underline text-sm">Manage assignments →</Link>
+            <Link
+              to="/admin/vans"
+              className="text-salon-purple hover:underline text-sm"
+            >
+              Manage assignments →
+            </Link>
           </CardFooter>
         </Card>
 
@@ -244,10 +275,17 @@ const AdminDashboard = () => {
             <CardDescription>Manage active promotions</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">{pendingPromotions} new promotions ready to activate</p>
+            <p className="text-sm text-gray-500">
+              {pendingPromotions} new promotions ready to activate
+            </p>
           </CardContent>
           <CardFooter>
-            <Link to="/admin/promotions" className="text-salon-purple hover:underline text-sm">Manage promotions →</Link>
+            <Link
+              to="/admin/promotions"
+              className="text-salon-purple hover:underline text-sm"
+            >
+              Manage promotions →
+            </Link>
           </CardFooter>
         </Card>
 
@@ -260,10 +298,17 @@ const AdminDashboard = () => {
             <CardDescription>Manage upcoming wedding bookings</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">{contractsNeedingApproval} contract needs approval</p>
+            <p className="text-sm text-gray-500">
+              {contractsNeedingApproval} contract needs approval
+            </p>
           </CardContent>
           <CardFooter>
-            <Link to="/admin/weddings" className="text-salon-purple hover:underline text-sm">Process contracts →</Link>
+            <Link
+              to="/admin/weddings"
+              className="text-salon-purple hover:underline text-sm"
+            >
+              Process contracts →
+            </Link>
           </CardFooter>
         </Card>
       </div>

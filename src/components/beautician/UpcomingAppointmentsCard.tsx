@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Check, X, CalendarDays } from "lucide-react";
@@ -43,7 +42,7 @@ const UpcomingAppointmentsCard = () => {
       time: "4:00 PM",
       service: "Lash Extension",
       clientName: "Dina Mohamed",
-    }
+    },
   ];
 
   // Handle cancel appointment
@@ -51,13 +50,15 @@ const UpcomingAppointmentsCard = () => {
     // In a real app, this would open a modal for cancellation reason
     const reason = window.prompt("Please provide a reason for cancellation:");
     if (!reason) return;
-    
-    toast.info(`Appointment with ${clientName} cancelled. Admin has been notified.`);
-    
+
+    toast.info(
+      `Appointment with ${clientName} cancelled. Admin has been notified.`,
+    );
+
     // In a real app, this would call the API
-    console.log("API call would be: PATCH /api/bookings/" + id, { 
+    console.log("API call would be: PATCH /api/bookings/" + id, {
       status: "cancelled",
-      cancellationReason: reason
+      cancellationReason: reason,
     });
   };
 
@@ -77,15 +78,24 @@ const UpcomingAppointmentsCard = () => {
                 <div key={appointment.id} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">{appointment.date}</p>
+                      <p className="text-sm text-gray-500 font-medium">
+                        {appointment.date}
+                      </p>
                       <p className="font-medium">{appointment.time}</p>
                       <p className="text-sm font-bold">{appointment.service}</p>
-                      <p className="text-sm text-gray-600">{appointment.clientName}</p>
+                      <p className="text-sm text-gray-600">
+                        {appointment.clientName}
+                      </p>
                     </div>
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => handleCancelAppointment(appointment.id, appointment.clientName)}
+                      onClick={() =>
+                        handleCancelAppointment(
+                          appointment.id,
+                          appointment.clientName,
+                        )
+                      }
                     >
                       <X className="h-4 w-4 mr-1" />
                       Cancel
@@ -96,7 +106,9 @@ const UpcomingAppointmentsCard = () => {
             </div>
           ) : (
             <div className="h-full flex items-center justify-center p-6">
-              <p className="text-gray-500 text-center">No upcoming appointments scheduled</p>
+              <p className="text-gray-500 text-center">
+                No upcoming appointments scheduled
+              </p>
             </div>
           )}
         </div>

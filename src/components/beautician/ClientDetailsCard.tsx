@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,28 +20,30 @@ const ClientDetailsCard = () => {
       name: "Fatima Ahmed",
       phone: "+20 101 234 5678",
       location: "New Cairo, Rehab City",
-      serviceNotes: "Allergic to latex. Prefers natural looks."
+      serviceNotes: "Allergic to latex. Prefers natural looks.",
     },
     {
       id: "2",
       name: "Mariam Khalid",
       phone: "+20 112 345 6789",
       location: "Cairo, Maadi",
-      serviceNotes: "First-time client. Wants subtle look."
+      serviceNotes: "First-time client. Wants subtle look.",
     },
   ]);
-  
+
   const [activeClient, setActiveClient] = useState<ClientDetails>(clients[0]);
 
   const handleCallClient = () => {
     // In a real app, this would use tel: protocol to initiate a call
-    window.open(`tel:${activeClient.phone.replace(/\s+/g, '')}`);
+    window.open(`tel:${activeClient.phone.replace(/\s+/g, "")}`);
     toast.success(`Calling ${activeClient.name}...`);
   };
-  
+
   const handleGetDirections = () => {
     // In a real app, this would open Google Maps with the location
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeClient.location)}`);
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeClient.location)}`,
+    );
     toast.success("Opened directions in Google Maps");
   };
 
@@ -68,20 +69,22 @@ const ClientDetailsCard = () => {
               </Button>
             ))}
           </div>
-          
+
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
             <h3 className="font-bold text-lg mb-2">{activeClient.name}</h3>
             <p className="text-sm mb-1">
               <span className="font-medium">Phone:</span> {activeClient.phone}
             </p>
             <p className="text-sm mb-1">
-              <span className="font-medium">Location:</span> {activeClient.location}
+              <span className="font-medium">Location:</span>{" "}
+              {activeClient.location}
             </p>
             <p className="text-sm">
-              <span className="font-medium">Notes:</span> {activeClient.serviceNotes}
+              <span className="font-medium">Notes:</span>{" "}
+              {activeClient.serviceNotes}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <Button onClick={handleCallClient}>
               <Phone className="h-4 w-4 mr-2" />

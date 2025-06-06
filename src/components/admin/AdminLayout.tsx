@@ -1,18 +1,17 @@
-
 import { useState, ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Calendar, 
+import {
+  Calendar,
   CreditCard,
-  Home, 
-  User, 
+  Home,
+  User,
   Users,
   Heart,
   Menu,
   X,
   LogOut,
-  Truck
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,41 +23,59 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-  
+
   const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: <Home size={20} /> },
     { name: "Bookings", path: "/admin/bookings", icon: <Calendar size={20} /> },
-    { name: "Beauticians", path: "/admin/beauticians", icon: <Users size={20} /> },
-    { name: "Promotions", path: "/admin/promotions", icon: <Heart size={20} /> },
+    {
+      name: "Beauticians",
+      path: "/admin/beauticians",
+      icon: <Users size={20} />,
+    },
+    {
+      name: "Promotions",
+      path: "/admin/promotions",
+      icon: <Heart size={20} />,
+    },
     { name: "Weddings", path: "/admin/weddings", icon: <Calendar size={20} /> },
-    { name: "Payments", path: "/admin/payments", icon: <CreditCard size={20} /> },
+    {
+      name: "Payments",
+      path: "/admin/payments",
+      icon: <CreditCard size={20} />,
+    },
     { name: "Vans", path: "/admin/vans", icon: <Truck size={20} /> },
   ];
-  
+
   // Helper function to check if a nav item is active
   const isNavItemActive = (path: string) => {
     // For the dashboard, handle both /admin and /admin/dashboard
-    if (path === '/admin/dashboard') {
-      return location.pathname === '/admin' || location.pathname === '/admin/dashboard';
+    if (path === "/admin/dashboard") {
+      return (
+        location.pathname === "/admin" ||
+        location.pathname === "/admin/dashboard"
+      );
     }
     // For beauticians/stylists paths, treat them as the same section
-    if (path === '/admin/beauticians') {
-      return location.pathname === '/admin/beauticians' || location.pathname === '/admin/stylists';
+    if (path === "/admin/beauticians") {
+      return (
+        location.pathname === "/admin/beauticians" ||
+        location.pathname === "/admin/stylists"
+      );
     }
     // For other paths, check exact match
     return location.pathname === path;
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar toggle */}
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
           className="bg-white shadow-md"
           onClick={toggleSidebar}
@@ -66,9 +83,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </Button>
       </div>
-    
+
       {/* Sidebar */}
-      <div 
+      <div
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } fixed md:relative bg-white shadow-lg h-full md:h-screen z-40 transition-transform duration-300 ease-in-out flex flex-col w-64 md:translate-x-0`}
@@ -81,12 +98,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </h1>
           </Link>
         </div>
-        
+
         {/* Sidebar Navigation */}
         <div className="flex-1 overflow-y-auto p-4">
           <nav className="space-y-1">
             {navItems.map((item) => (
-              <Link 
+              <Link
                 key={item.path}
                 to={item.path}
                 className={`flex items-center px-4 py-3 rounded-md transition-colors ${
@@ -101,7 +118,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             ))}
           </nav>
         </div>
-        
+
         {/* Sidebar Footer */}
         <div className="p-4 border-t">
           <div className="flex items-center mb-4">
@@ -114,9 +131,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="w-full flex items-center"
               onClick={() => logout()}
             >
@@ -126,7 +143,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
@@ -139,7 +156,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
           </div>
         </header>
-        
+
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50">
           {children}

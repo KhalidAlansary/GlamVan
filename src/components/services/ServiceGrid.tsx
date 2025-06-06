@@ -1,4 +1,3 @@
-
 import { ServiceType } from "@/types/service";
 import ServiceCard from "../ServiceCard";
 

@@ -1,4 +1,3 @@
-
 export interface Beautician {
   id: string;
   name: string;

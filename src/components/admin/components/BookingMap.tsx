@@ -1,4 +1,3 @@
-
 import GoogleBookingMap from "./GoogleBookingMap";
 
 interface BookingMapProps {

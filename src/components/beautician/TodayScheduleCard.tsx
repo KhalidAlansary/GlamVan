@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,26 +42,30 @@ const TodayScheduleCard = () => {
   const handleStartService = (id: string) => {
     setAppointments(
       appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: "in-progress" } : apt
-      )
+        apt.id === id ? { ...apt, status: "in-progress" } : apt,
+      ),
     );
     toast.success("Service started! Client has been notified.");
-    
+
     // In a real app, this would call the API
-    console.log("API call would be: PATCH /api/bookings/" + id, { status: "in-progress" });
+    console.log("API call would be: PATCH /api/bookings/" + id, {
+      status: "in-progress",
+    });
   };
 
   // Handle finish service
   const handleFinishService = (id: string) => {
     setAppointments(
       appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: "completed" } : apt
-      )
+        apt.id === id ? { ...apt, status: "completed" } : apt,
+      ),
     );
     toast.success("Service completed! Thank you for your work.");
-    
+
     // In a real app, this would call the API
-    console.log("API call would be: PATCH /api/bookings/" + id, { status: "completed" });
+    console.log("API call would be: PATCH /api/bookings/" + id, {
+      status: "completed",
+    });
   };
 
   // Handle cancel appointment
@@ -70,18 +73,18 @@ const TodayScheduleCard = () => {
     // In a real app, this would open a modal for cancellation reason
     const reason = window.prompt("Please provide a reason for cancellation:");
     if (!reason) return;
-    
+
     setAppointments(
       appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: "cancelled" } : apt
-      )
+        apt.id === id ? { ...apt, status: "cancelled" } : apt,
+      ),
     );
     toast.info("Appointment cancelled. Admin has been notified.");
-    
+
     // In a real app, this would call the API
-    console.log("API call would be: PATCH /api/bookings/" + id, { 
+    console.log("API call would be: PATCH /api/bookings/" + id, {
       status: "cancelled",
-      cancellationReason: reason
+      cancellationReason: reason,
     });
   };
 
@@ -103,7 +106,9 @@ const TodayScheduleCard = () => {
                     <div>
                       <p className="font-medium">{appointment.time}</p>
                       <p className="text-sm font-bold">{appointment.service}</p>
-                      <p className="text-sm text-gray-600">{appointment.clientName}</p>
+                      <p className="text-sm text-gray-600">
+                        {appointment.clientName}
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       {appointment.status === "upcoming" && (
@@ -119,7 +124,9 @@ const TodayScheduleCard = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleCancelAppointment(appointment.id)}
+                            onClick={() =>
+                              handleCancelAppointment(appointment.id)
+                            }
                           >
                             <X className="h-4 w-4 mr-1" />
                             Cancel
@@ -153,7 +160,9 @@ const TodayScheduleCard = () => {
             </div>
           ) : (
             <div className="h-full flex items-center justify-center p-6">
-              <p className="text-gray-500 text-center">No appointments scheduled for today</p>
+              <p className="text-gray-500 text-center">
+                No appointments scheduled for today
+              </p>
             </div>
           )}
         </div>
