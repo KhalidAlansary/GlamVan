@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen-types": "supabase gen types typescript --project-id wfwjucnncbctfxflmjzk > src/integrations/supabase/types.ts && prettier --write src/integrations/supabase/types.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -36,6 +36,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      location_to_van_mapping: {
+        Row: {
+          id: number;
+          location: string;
+          van_id: number | null;
+        };
+        Insert: {
+          id?: number;
+          location: string;
+          van_id?: number | null;
+        };
+        Update: {
+          id?: number;
+          location?: string;
+          van_id?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "Location to Van Mapping_van_id_fkey";
+            columns: ["van_id"];
+            isOneToOne: false;
+            referencedRelation: "vans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       posts: {
         Row: {
           content: string | null;
@@ -87,6 +113,69 @@ export type Database = {
           full_name?: string | null;
           id?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      services: {
+        Row: {
+          category: string;
+          description: string | null;
+          icon: string | null;
+          id: number;
+          image: string | null;
+          link: string | null;
+          price: string | null;
+          title: string | null;
+        };
+        Insert: {
+          category: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: number;
+          image?: string | null;
+          link?: string | null;
+          price?: string | null;
+          title?: string | null;
+        };
+        Update: {
+          category?: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: number;
+          image?: string | null;
+          link?: string | null;
+          price?: string | null;
+          title?: string | null;
+        };
+        Relationships: [];
+      };
+      vans: {
+        Row: {
+          capacity: string | null;
+          driver: string | null;
+          id: number;
+          last_service: string | null;
+          location: string | null;
+          name: string;
+          status: string | null;
+        };
+        Insert: {
+          capacity?: string | null;
+          driver?: string | null;
+          id?: number;
+          last_service?: string | null;
+          location?: string | null;
+          name: string;
+          status?: string | null;
+        };
+        Update: {
+          capacity?: string | null;
+          driver?: string | null;
+          id?: number;
+          last_service?: string | null;
+          location?: string | null;
+          name?: string;
+          status?: string | null;
         };
         Relationships: [];
       };
