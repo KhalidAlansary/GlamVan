@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { Tabs } from "@/components/ui/tabs";
-import { services } from "@/data/services";
 import ServiceTabs from "./services/ServiceTabs";
 import ServiceGrid from "./services/ServiceGrid";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Services = () => {
   const [activeTab, setActiveTab] = useState("all");
+
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data } = await supabase.from("services").select("*");
+
+      return data;
+    },
+  });
 
   const filteredServices =
     activeTab === "all"

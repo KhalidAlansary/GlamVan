@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { services } from "@/data/services";
 import { BookingData } from "../BookingForm";
 import { CheckCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceSelectionProps {
   bookingData: BookingData;
@@ -31,6 +32,15 @@ const ServiceSelection = ({
 }: ServiceSelectionProps) => {
   const [activeTab, setActiveTab] = useState(bookingData.category || "hair");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data } = await supabase.from("services").select("*");
+
+      return data;
+    },
+  });
 
   // Set initial tab based on pre-selected service
   useEffect(() => {

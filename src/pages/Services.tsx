@@ -3,8 +3,17 @@ import Footer from "@/components/Footer";
 import ServiceCard from "@/components/ServiceCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
-import { services } from "@/data/services";
 import { useSearchParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Brush, Scissors, DollarSign } from "lucide-react";
+
+function stringToIcon(iconName: string) {
+  if (iconName === "Brush") return Brush;
+  if (iconName === "Scissors") return Scissors;
+  if (iconName === "DollarSign") return DollarSign;
+  return null;
+}
 
 const Services = () => {
   const [searchParams] = useSearchParams();
@@ -16,6 +25,15 @@ const Services = () => {
       setActiveTab(category);
     }
   }, [searchParams]);
+
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data } = await supabase.from("services").select("*");
+
+      return data;
+    },
+  });
 
   const filteredServices =
     activeTab === "all"
@@ -95,7 +113,7 @@ const Services = () => {
                   price={service.price}
                   image={service.image}
                   link={service.link}
-                  icon={service.icon}
+                  icon={stringToIcon(service.icon)}
                 />
               ))}
             </div>

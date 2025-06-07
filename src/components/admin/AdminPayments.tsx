@@ -16,7 +16,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { services } from "@/data/services";
 
 const AdminPayments = () => {
   const [openDialog, setOpenDialog] = useState<string | null>(null);

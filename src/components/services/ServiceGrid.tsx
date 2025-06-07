@@ -1,11 +1,7 @@
-import { ServiceType } from "@/types/service";
 import ServiceCard from "../ServiceCard";
+import { Tables } from "@/integrations/supabase/types";
 
-interface ServiceGridProps {
-  services: ServiceType[];
-}
-
-const ServiceGrid = ({ services }: ServiceGridProps) => {
+const ServiceGrid = ({ services }: { services: Tables<"services">[] }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       {services.map((service) => (

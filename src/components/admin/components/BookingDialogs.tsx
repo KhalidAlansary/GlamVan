@@ -27,9 +27,10 @@ import {
   autoAssignVan,
   validatePhone,
 } from "../utils/bookingUtils";
-import { services } from "@/data/services";
 import { useAuth } from "@/contexts/AuthContext";
 import BookingMap from "./BookingMap";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingDialogsProps {
   // Dialog states
@@ -205,7 +206,7 @@ const BookingDialogs = ({
 
     // Validate price based on service
     const selectedService = editForm.service;
-    const minPrice = getMinimumPriceForService(selectedService);
+    const minPrice = getMinimumPriceForService(selectedService, services);
     const currentPrice = parseInt(
       editForm.price?.replace(/[^0-9]/g, "") || "0",
     );
@@ -244,7 +245,7 @@ const BookingDialogs = ({
 
     // Validate price based on service
     const selectedService = newBooking.service;
-    const minPrice = getMinimumPriceForService(selectedService || "");
+    const minPrice = getMinimumPriceForService(selectedService || "", services);
     const currentPrice = parseInt(
       newBooking.price?.replace(/[^0-9]/g, "") || "0",
     );
@@ -336,7 +337,7 @@ const BookingDialogs = ({
 
       const selectedService = newBooking.service;
       if (selectedService) {
-        const minPrice = getMinimumPriceForService(selectedService);
+        const minPrice = getMinimumPriceForService(selectedService, services);
         const priceValue = parseInt(numericValue || "0");
 
         if (priceValue < minPrice) {
@@ -357,7 +358,7 @@ const BookingDialogs = ({
 
     // When service changes, update the price automatically
     if (field === "service") {
-      const minPrice = getMinimumPriceForService(value);
+      const minPrice = getMinimumPriceForService(value, services);
       const priceString = minPrice > 0 ? `${minPrice}` : "0";
 
       setNewBooking({
@@ -407,7 +408,7 @@ const BookingDialogs = ({
       const numericValue = value.replace(/[^0-9]/g, "");
 
       const selectedService = editForm.service;
-      const minPrice = getMinimumPriceForService(selectedService);
+      const minPrice = getMinimumPriceForService(selectedService, services);
       const priceValue = parseInt(numericValue || "0");
 
       if (priceValue < minPrice) {
@@ -427,7 +428,7 @@ const BookingDialogs = ({
 
     // When service changes, update the price automatically
     if (field === "service") {
-      const minPrice = getMinimumPriceForService(value);
+      const minPrice = getMinimumPriceForService(value, services);
       const priceString = minPrice > 0 ? `${minPrice}` : editForm.price;
 
       setEditForm({
@@ -462,6 +463,14 @@ const BookingDialogs = ({
     setEditForm({ ...booking });
     setShowEditDialog(true);
   };
+
+  const { data: services } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data } = await supabase.from("services").select("*");
+      return data;
+    },
+  });
 
   return (
     <>

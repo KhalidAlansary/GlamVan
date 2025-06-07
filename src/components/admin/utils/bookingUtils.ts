@@ -1,7 +1,10 @@
-import { services } from "@/data/services";
 import { Booking } from "../types/booking";
+import { Tables } from "@/integrations/supabase/types";
 
-export const getMinimumPriceForService = (serviceName: string): number => {
+export const getMinimumPriceForService = (
+  serviceName: string,
+  services: Tables<"services">[],
+): number => {
   const service = services.find((s) => s.title === serviceName);
   if (!service) return 0;
 

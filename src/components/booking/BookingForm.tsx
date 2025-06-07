@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { services } from "@/data/services";
 import { getAvailableVanForLocation } from "@/data/vans";
 import ServiceSelection from "./steps/ServiceSelection";
 import DateTimeSelection from "./steps/DateTimeSelection";
@@ -17,6 +16,8 @@ import { CalendarIcon, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import BeauticianSelection from "./steps/BeauticianSelection";
 import RateExperience from "./steps/RateExperience";
 import LoyaltyTracking from "./steps/LoyaltyTracking";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface BookingData {
   category: string;
@@ -81,6 +82,15 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
   const [bookingCompleted, setBookingCompleted] = useState(false);
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data } = await supabase.from("services").select("*");
+
+      return data;
+    },
+  });
+
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
@@ -128,7 +138,7 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
         console.log(`No service found for: ${preSelectedService}`);
       }
     }
-  }, [preSelectedService]);
+  }, [preSelectedService, services]);
 
   // Set all selected categories
   useEffect(() => {
@@ -146,7 +156,7 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
     } else {
       setAllCategories([]);
     }
-  }, [bookingData.services]);
+  }, [bookingData.services, services]);
 
   // Automatically assign van when location is selected
   useEffect(() => {
@@ -212,7 +222,7 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
     }
 
     setTotalPrice(total);
-  }, [bookingData.services, bookingData.date]);
+  }, [bookingData.services, bookingData.date, services]);
 
   const handleNext = () => {
     if (currentStep === steps.length - 4) {
