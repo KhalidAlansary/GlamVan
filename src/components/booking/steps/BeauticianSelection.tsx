@@ -3,61 +3,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { BookingData } from "../BookingForm";
 import { UserRound, Star, StarHalf } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface BeauticianSelectionProps {
   bookingData: BookingData;
   updateBookingData: (data: Partial<BookingData>) => void;
   categories: string[];
 }
-
-// Sample beauticians data - in a real app this would come from an API/database
-const beauticians = [
-  {
-    id: "1",
-    name: "Sarah Ahmed",
-    specialties: ["hair", "makeup"],
-    experience: "5 years",
-    rating: 4.9,
-    reviews: 124,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "2",
-    name: "Layla Mahmoud",
-    specialties: ["nails", "lashes"],
-    experience: "7 years",
-    rating: 4.7,
-    reviews: 98,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "3",
-    name: "Nour Hassan",
-    specialties: ["hair", "makeup", "wedding"],
-    experience: "8 years",
-    rating: 4.8,
-    reviews: 156,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "4",
-    name: "Maya Kamel",
-    specialties: ["nails", "lashes", "makeup"],
-    experience: "4 years",
-    rating: 4.6,
-    reviews: 87,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "5",
-    name: "Dina Samir",
-    specialties: ["hair", "wedding"],
-    experience: "9 years",
-    rating: 5.0,
-    reviews: 203,
-    image: "/placeholder.svg",
-  },
-];
 
 const BeauticianSelection = ({
   bookingData,
@@ -67,6 +21,35 @@ const BeauticianSelection = ({
   const [selectedBeautician, setSelectedBeautician] = useState(
     bookingData.beautician,
   );
+
+  // Fetch stylists from Supabase
+  const { data: stylists = [], isLoading } = useQuery({
+    queryKey: ["stylists"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stylists")
+        .select("*")
+        .eq("status", "available");
+
+      if (error) {
+        console.error("Error fetching stylists:", error);
+        throw error;
+      }
+
+      return data as Tables<"stylists">[];
+    },
+  });
+
+  // Transform stylists data to match the expected format
+  const beauticians = stylists.map(stylist => ({
+    id: stylist.id.toString(),
+    name: stylist.name,
+    specialties: stylist.specialties || [],
+    experience: stylist.experience || "0 years",
+    rating: stylist.rating || 4.5,
+    reviews: Math.floor(Math.random() * 100) + 50, // Generate random review count
+    image: stylist.image || "/placeholder.svg",
+  }));
 
   // Filter beauticians by matching specialties with selected service categories
   const filteredBeauticians = beauticians.filter((beautician) => {
@@ -119,7 +102,11 @@ const BeauticianSelection = ({
         Select a beautician specializing in your requested services
       </p>
 
-      {filteredBeauticians.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center p-6">
+          <p className="text-gray-500">Loading beauticians...</p>
+        </div>
+      ) : filteredBeauticians.length === 0 ? (
         <div className="text-center p-6 border border-dashed border-gray-300 rounded-md">
           <p className="text-gray-500">
             No beauticians available for these services. Please try different

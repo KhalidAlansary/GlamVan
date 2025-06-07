@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
   CardContent,
@@ -15,303 +17,341 @@ import {
   Percent,
   Tag,
   MapPin,
+  TrendingUp,
+  Star,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const AdminDashboard = () => {
-  // Mock data
-  const statCards = [
-    {
-      title: "Total Bookings",
-      value: "156",
-      change: "+12% from last month",
-      icon: <Calendar className="h-8 w-8 text-salon-purple" />,
-      background: "bg-salon-pink/10",
-      linkTo: "/admin/bookings",
+  // Fetch bookings from Supabase
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
+    queryKey: ["dashboard-bookings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
     },
-    {
-      title: "Active Beauticians",
-      value: "8",
-      change: "+2 this month",
-      icon: <Users className="h-8 w-8 text-salon-purple" />,
-      background: "bg-salon-pink/10",
-      linkTo: "/admin/stylists",
-    },
-    {
-      title: "Revenue",
-      value: "$24,580",
-      change: "+18% from last month",
-      icon: <DollarSign className="h-8 w-8 text-salon-purple" />,
-      background: "bg-salon-pink/10",
-      linkTo: "/admin/payments",
-    },
-    {
-      title: "Active Discounts",
-      value: "3",
-      change: "50+ redemptions",
-      icon: <Percent className="h-8 w-8 text-salon-purple" />,
-      background: "bg-salon-pink/10",
-      linkTo: "/admin/promotions",
-    },
-  ];
+  });
 
-  // Mock upcoming bookings with location information
-  const upcomingBookings = [
-    {
-      id: "BK-1234",
-      client: "Fatima Ahmed",
-      service: "Bridal Makeup",
-      stylist: "Layla Mohammed",
-      date: "May 2, 2025",
-      time: "10:00 AM",
-      status: "confirmed",
-      vanAssigned: true,
-      van: "GlamVanLuxury",
-      location: "New Cairo, Rehab City",
+  // Fetch stylists from Supabase
+  const { data: stylists = [], isLoading: stylistsLoading } = useQuery({
+    queryKey: ["dashboard-stylists"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stylists")
+        .select("*");
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
     },
-    {
-      id: "BK-1235",
-      client: "Mariam Khalid",
-      service: "Hair & Nails",
-      stylist: "Nora Abdullah",
-      date: "May 3, 2025",
-      time: "2:30 PM",
-      status: "confirmed",
-      vanAssigned: false,
-      van: null,
-      location: "Cairo, Maadi",
+  });
+
+  // Fetch vans from Supabase
+  const { data: vans = [], isLoading: vansLoading } = useQuery({
+    queryKey: ["dashboard-vans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vans")
+        .select("*");
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
     },
-    {
-      id: "BK-1236",
-      client: "Sara Ali",
-      service: "Full Glam Package",
-      stylist: "Aisha Hassan",
-      date: "May 4, 2025",
-      time: "11:15 AM",
-      status: "pending",
-      vanAssigned: true,
-      van: "GlamVanLuxury",
-      location: "Giza, Sheikh Zayed",
+  });
+
+  // Fetch payments from Supabase
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ["dashboard-payments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
     },
-  ];
+  });
 
-  // Mock van assignments needed
-  const vanAssignmentsNeeded = 2;
+  // Calculate statistics
+  const totalBookings = bookings.length;
+  const confirmedBookings = bookings.filter(b => b.status === "confirmed").length;
+  const pendingBookings = bookings.filter(b => b.status === "pending").length;
+  const completedBookings = bookings.filter(b => b.status === "completed").length;
 
-  // Mock contracts needing approval
-  const contractsNeedingApproval = 1;
+  const totalStylists = stylists.length;
+  const activeStylists = stylists.filter(s => s.status === "active").length;
 
-  // Mock pending promotions
-  const pendingPromotions = 2;
+  const totalVans = vans.length;
+  const availableVans = vans.filter(v => v.status === "available").length;
+
+  const totalRevenue = payments
+    .filter(p => p.status === "completed")
+    .reduce((sum, p) => sum + parseFloat(p.amount || "0"), 0);
+
+  const monthlyRevenue = payments
+    .filter(p => {
+      const paymentDate = new Date(p.date);
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+    })
+    .reduce((sum, p) => sum + parseFloat(p.amount || "0"), 0);
+
+  // Recent bookings for the table
+  const recentBookings = bookings.slice(0, 5);
+
+  // Get status badge styling
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Handle loading state
+  if (bookingsLoading || stylistsLoading || vansLoading || paymentsLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-salon-purple mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => (
-          <Link to={stat.linkTo} key={index} className="block">
-            <Card
-              key={index}
-              className="border-none shadow-md hover:shadow-lg transition-shadow h-full"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-sm font-medium text-gray-500">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`${stat.background} p-2 rounded-md`}>
-                    {stat.icon}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-sm text-gray-500 mt-1">{stat.change}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+        <p className="text-gray-600">Welcome back! Here's what's happening with GlamVan today.</p>
       </div>
 
-      {/* Van Assignments Alert */}
-      {vanAssignmentsNeeded > 0 && (
-        <Card className="border-none shadow-md border-l-4 border-l-yellow-500">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="flex items-center text-yellow-700">
-                  <Truck className="mr-2 h-5 w-5" />
-                  Van Assignments Required
-                </CardTitle>
-                <CardDescription>
-                  {vanAssignmentsNeeded} bookings need van assignments for
-                  upcoming appointments
-                </CardDescription>
-              </div>
-              <Button asChild>
-                <Link to="/admin/vans">Assign Vans</Link>
-              </Button>
-            </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalBookings}</div>
+            <p className="text-xs text-muted-foreground">
+              {confirmedBookings} confirmed, {pendingBookings} pending
+            </p>
+          </CardContent>
         </Card>
-      )}
 
-      {/* Upcoming Bookings */}
+        <Card className="border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Stylists</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeStylists}</div>
+            <p className="text-xs text-muted-foreground">
+              {totalStylists} total stylists
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available Vans</CardTitle>
+            <Truck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{availableVans}</div>
+            <p className="text-xs text-muted-foreground">
+              {totalVans} total vans
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">EGP {monthlyRevenue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Total: EGP {totalRevenue.toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Booking Status Overview */}
+        <Card className="border-none shadow-md">
+          <CardHeader>
+            <CardTitle>Booking Status Overview</CardTitle>
+            <CardDescription>Current status of all bookings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm">Confirmed</span>
+                </div>
+                <span className="font-semibold">{confirmedBookings}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                  <span className="text-sm">Pending</span>
+                </div>
+                <span className="font-semibold">{pendingBookings}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm">Completed</span>
+                </div>
+                <span className="font-semibold">{completedBookings}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Stylists */}
+        <Card className="border-none shadow-md">
+          <CardHeader>
+            <CardTitle>Top Performing Stylists</CardTitle>
+            <CardDescription>Based on ratings and completed bookings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stylists
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 3)
+                .map((stylist, index) => (
+                  <div key={stylist.id} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-salon-purple text-white rounded-full flex items-center justify-center text-sm font-medium mr-3">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{stylist.name}</p>
+                        <p className="text-xs text-gray-500">{(stylist.bookings_completed || []).length} bookings</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                      <span className="text-sm font-medium">{(stylist.rating || 0).toFixed(1)}</span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Bookings */}
       <Card className="border-none shadow-md">
         <CardHeader>
-          <CardTitle>Upcoming Bookings</CardTitle>
-          <CardDescription>
-            Recently scheduled appointments that need attention
-          </CardDescription>
+          <CardTitle>Recent Bookings</CardTitle>
+          <CardDescription>Latest booking activity</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-semibold text-gray-500 border-b">
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Client</th>
-                  <th className="px-4 py-3">Service</th>
-                  <th className="px-4 py-3">Stylist</th>
-                  <th className="px-4 py-3">Date & Time</th>
-                  <th className="px-4 py-3">Location</th>
-                  <th className="px-4 py-3">Van</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {upcomingBookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium">
-                      {booking.id}
-                    </td>
-                    <td className="px-4 py-4 text-sm">{booking.client}</td>
-                    <td className="px-4 py-4 text-sm">{booking.service}</td>
-                    <td className="px-4 py-4 text-sm">{booking.stylist}</td>
-                    <td className="px-4 py-4 text-sm">
-                      {booking.date} at {booking.time}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span className="flex items-center">
-                        <MapPin className="h-3 w-3 mr-1 text-salon-purple" />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Booking ID</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentBookings.map((booking) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">{booking.id}</TableCell>
+                    <TableCell>{booking.client}</TableCell>
+                    <TableCell>{booking.service}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Clock size={12} className="mr-1 text-gray-400" />
+                        <div>
+                          <div className="text-sm">{booking.date}</div>
+                          <div className="text-xs text-gray-500">{booking.time}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <MapPin size={12} className="mr-1 text-gray-400" />
                         {booking.location}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {booking.vanAssigned ? (
-                        <span className="text-green-600 flex items-center">
-                          <Truck className="h-3 w-3 mr-1" />
-                          {booking.van}
-                        </span>
-                      ) : (
-                        <span className="text-red-600 flex items-center">
-                          Not assigned
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          booking.status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {booking.status === "confirmed"
-                          ? "Confirmed"
-                          : "Pending"}
-                      </span>
-                    </td>
-                  </tr>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${getStatusBadge(booking.status)} border-0`}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">EGP {booking.price || "0"}</span>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+                {recentBookings.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      No recent bookings
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
-        <CardFooter>
-          <Link
-            to="/admin/bookings"
-            className="text-salon-purple hover:underline text-sm"
-          >
-            View all bookings →
-          </Link>
-        </CardFooter>
       </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Truck className="h-5 w-5 mr-2 text-salon-purple" />
-              Van Assignments
-            </CardTitle>
-            <CardDescription>Assign van to upcoming bookings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              {vanAssignmentsNeeded} bookings need van assignment
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Link
-              to="/admin/vans"
-              className="text-salon-purple hover:underline text-sm"
-            >
-              Manage assignments →
-            </Link>
-          </CardFooter>
-        </Card>
-
-        <Card className="border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Tag className="h-5 w-5 mr-2 text-salon-purple" />
-              Discount Codes
-            </CardTitle>
-            <CardDescription>Manage active promotions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              {pendingPromotions} new promotions ready to activate
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Link
-              to="/admin/promotions"
-              className="text-salon-purple hover:underline text-sm"
-            >
-              Manage promotions →
-            </Link>
-          </CardFooter>
-        </Card>
-
-        <Card className="border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-salon-purple" />
-              Wedding Contracts
-            </CardTitle>
-            <CardDescription>Manage upcoming wedding bookings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              {contractsNeedingApproval} contract needs approval
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Link
-              to="/admin/weddings"
-              className="text-salon-purple hover:underline text-sm"
-            >
-              Process contracts →
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
     </div>
   );
 };

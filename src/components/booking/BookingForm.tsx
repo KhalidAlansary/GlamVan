@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getAvailableVanForLocation } from "@/data/vans";
 import ServiceSelection from "./steps/ServiceSelection";
 import DateTimeSelection from "./steps/DateTimeSelection";
 import LocationSelection from "./steps/LocationSelection";
@@ -18,6 +17,7 @@ import RateExperience from "./steps/RateExperience";
 import LoyaltyTracking from "./steps/LoyaltyTracking";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export interface BookingData {
   category: string;
@@ -91,6 +91,23 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
     },
   });
 
+  const { data: vans = [] } = useQuery({
+    queryKey: ["vans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vans")
+        .select("*")
+        .eq("status", "available");
+
+      if (error) {
+        console.error("Error fetching vans:", error);
+        throw error;
+      }
+
+      return data as Tables<"vans">[];
+    },
+  });
+
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
@@ -160,19 +177,42 @@ const BookingForm = ({ preSelectedService }: BookingFormProps) => {
 
   // Automatically assign van when location is selected
   useEffect(() => {
-    if (bookingData.location && !bookingData.assignedVan) {
-      const availableVan = getAvailableVanForLocation(bookingData.location);
+    if (bookingData.location && !bookingData.assignedVan && vans.length > 0) {
+      // Location mapping for Egyptian areas
+      const locationMapping: { [key: string]: string[] } = {
+        "New Cairo": ["New Cairo", "Cairo", "Nasr City"],
+        "El Rehab": ["El Rehab", "New Cairo", "Cairo"],
+        "Sheikh Zayed": ["Sheikh Zayed", "6th of October", "Giza"],
+        "Tagmo3": ["Tagmo3", "New Cairo", "El Rehab"],
+        "Maadi": ["Maadi", "Cairo"],
+        "Zamalek": ["Zamalek", "Cairo"],
+        "Heliopolis": ["Heliopolis", "Cairo", "Nasr City"],
+        "Dokki": ["Dokki", "Giza"],
+        "Mohandessin": ["Mohandessin", "Giza"],
+        "Nasr City": ["Nasr City", "Cairo", "Heliopolis"],
+      };
+
+      const possibleLocations = locationMapping[bookingData.location] || [bookingData.location];
+      
+      // Find available van for the location
+      const availableVan = vans.find(van => 
+        possibleLocations.some(loc => 
+          van.location?.toLowerCase().includes(loc.toLowerCase()) ||
+          van.name?.toLowerCase().includes(loc.toLowerCase())
+        )
+      ) || vans[0]; // Fallback to first available van
+
       if (availableVan) {
         setBookingData((prev) => ({
           ...prev,
-          assignedVan: availableVan.name,
+          assignedVan: availableVan.name || `Van ${availableVan.id}`,
         }));
         console.log(
-          `Automatically assigned ${availableVan.name} for ${bookingData.location}`,
+          `Automatically assigned ${availableVan.name || `Van ${availableVan.id}`} for ${bookingData.location}`,
         );
       }
     }
-  }, [bookingData.location]);
+  }, [bookingData.location, vans]);
 
   // Calculate total price based on selected services and any surcharges
   useEffect(() => {

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 import {
   Card,
   CardContent,
@@ -7,866 +10,614 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Plus, Tag, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+
+// Define types based on Supabase tables
+type Promotion = Tables<"promotions">;
 
 const AdminPromotions = () => {
-  // Toast hook
-  const { toast } = useToast();
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // State for dialogs
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const queryClient = useQueryClient();
 
-  // State for the currently selected promotion
-  const [selectedPromotion, setSelectedPromotion] = useState<null | {
-    id: number;
-    code: string;
-    discount: string;
-    description: string;
-    validUntil: string;
-    usageLimit: number;
-    usedCount: number;
-    status: string;
-  }>(null);
-
-  // State for the new promotion form
-  const [newPromotion, setNewPromotion] = useState({
-    code: "",
-    discount: "",
-    discountType: "%",
-    description: "",
-    validUntil: "",
-    usageLimit: 100,
+  // Fetch promotions from Supabase
+  const { data: promotions = [], isLoading: promotionsLoading, error: promotionsError } = useQuery({
+    queryKey: ["promotions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("promotions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data as Promotion[];
+    },
   });
 
-  // State for the edited promotion
-  const [editedPromotion, setEditedPromotion] = useState({
-    code: "",
-    discount: "",
-    discountType: "%",
-    description: "",
-    validUntil: "",
-    usageLimit: 100,
+  // Add promotion mutation
+  const addPromotionMutation = useMutation({
+    mutationFn: async (newPromotion: Partial<Promotion>) => {
+      const { data, error } = await supabase
+        .from("promotions")
+        .insert(newPromotion)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promotions"] });
+      toast.success("Promotion added successfully");
+      setIsAddDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to add promotion: ${error.message}`);
+    },
   });
 
-  // Mock data for active promotions
-  const [promotions, setPromotions] = useState([
-    {
-      id: 1,
-      code: "FIRSTBOOK20",
-      discount: "20%",
-      description: "20% off first booking",
-      validUntil: "June 30, 2025",
-      usageLimit: 100,
-      usedCount: 42,
-      status: "active",
+  // Update promotion mutation
+  const updatePromotionMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Promotion> }) => {
+      const { data, error } = await supabase
+        .from("promotions")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
     },
-    {
-      id: 2,
-      code: "RAMADAN30",
-      discount: "30%",
-      description: "Ramadan special offer",
-      validUntil: "May 15, 2025",
-      usageLimit: 50,
-      usedCount: 23,
-      status: "active",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promotions"] });
+      toast.success("Promotion updated successfully");
+      setIsEditDialogOpen(false);
     },
-    {
-      id: 3,
-      code: "WEDDING10",
-      discount: "10%",
-      description: "Wedding package discount",
-      validUntil: "December 31, 2025",
-      usageLimit: 200,
-      usedCount: 78,
-      status: "inactive",
+    onError: (error) => {
+      toast.error(`Failed to update promotion: ${error.message}`);
     },
-  ]);
+  });
 
-  // State for pricing rules
-  const [weekendPricing, setWeekendPricing] = useState("15");
-  const [holidayPricing, setHolidayPricing] = useState("25");
-  const [fridayChecked, setFridayChecked] = useState(true);
-  const [saturdayChecked, setSaturdayChecked] = useState(true);
+  // Remove promotion mutation
+  const removePromotionMutation = useMutation({
+    mutationFn: async (promotionId: number) => {
+      const { error } = await supabase
+        .from("promotions")
+        .delete()
+        .eq("id", promotionId);
+      
+      if (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promotions"] });
+      toast.success("Promotion removed successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to remove promotion: ${error.message}`);
+    },
+  });
 
-  // Handle creating a new promotion
-  const handleCreatePromotion = () => {
-    // Validation
-    if (!newPromotion.code) {
-      toast({
-        title: "Validation Error",
-        description: "Promo code is required",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Filter promotions based on search and status
+  const filteredPromotions = promotions.filter((promotion) => {
+    const matchesSearch =
+      promotion.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (promotion.description || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (!newPromotion.discount) {
-      toast({
-        title: "Validation Error",
-        description: "Discount amount is required",
-        variant: "destructive",
-      });
-      return;
-    }
+    const matchesStatus = filterStatus === "all" || promotion.status === filterStatus;
 
-    if (!newPromotion.validUntil) {
-      toast({
-        title: "Validation Error",
-        description: "Valid until date is required",
-        variant: "destructive",
-      });
-      return;
-    }
+    return matchesSearch && matchesStatus;
+  });
 
-    // Generate a new ID (in a real app, this would be done by the backend)
-    const newId =
-      promotions.length > 0 ? Math.max(...promotions.map((p) => p.id)) + 1 : 1;
-
-    // Format the discount based on the type
-    const formattedDiscount =
-      newPromotion.discountType === "%"
-        ? `${newPromotion.discount}%`
-        : `$${newPromotion.discount}`;
-
-    // Create the new promotion
-    const promotionToAdd = {
-      id: newId,
-      code: newPromotion.code.toUpperCase(),
-      discount: formattedDiscount,
-      description: newPromotion.description,
-      validUntil: new Date(newPromotion.validUntil).toLocaleDateString(
-        "en-US",
-        {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        },
-      ),
-      usageLimit: parseInt(newPromotion.usageLimit.toString()),
-      usedCount: 0,
-      status: "active",
-    };
-
-    // Add to the promotions array
-    setPromotions([...promotions, promotionToAdd]);
-
-    // Show success message
-    toast({
-      title: "Success",
-      description: `Promotion ${promotionToAdd.code} created successfully`,
+  // Handle status update
+  const handleStatusUpdate = (promotionId: number, newStatus: string) => {
+    updatePromotionMutation.mutate({
+      id: promotionId,
+      updates: { status: newStatus },
     });
-
-    // Reset form and close dialog
-    setNewPromotion({
-      code: "",
-      discount: "",
-      discountType: "%",
-      description: "",
-      validUntil: "",
-      usageLimit: 100,
-    });
-    setShowCreateDialog(false);
   };
 
-  // Handle opening edit dialog
-  const handleEditClick = (promotion) => {
-    setSelectedPromotion(promotion);
-
-    // Extract the discount value and type
-    let discountValue = "";
-    let discountType = "%";
-
-    if (promotion.discount.endsWith("%")) {
-      discountValue = promotion.discount.replace("%", "");
-      discountType = "%";
-    } else {
-      discountValue = promotion.discount.replace("$", "");
-      discountType = "$";
+  // Get status badge styling
+  const getStatusBadge = (status: string | null) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "inactive":
+        return "bg-red-100 text-red-800";
+      case "expired":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
+  };
 
-    // Convert date format
-    const dateParts = promotion.validUntil.split(" ");
-    const month = new Date(`${dateParts[0]} 1, 2000`).getMonth() + 1;
-    const day = parseInt(dateParts[1].replace(",", ""));
-    const year = parseInt(dateParts[2]);
-    const formattedDate = `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+  // Form for editing promotion
+  const editForm = useForm<Partial<Promotion>>();
+  const addForm = useForm<Partial<Promotion>>();
 
-    setEditedPromotion({
+  const handleEditPromotion = (promotion: Promotion) => {
+    setSelectedPromotion(promotion);
+    editForm.reset({
       code: promotion.code,
-      discount: discountValue,
-      discountType: discountType,
-      description: promotion.description,
-      validUntil: formattedDate,
-      usageLimit: promotion.usageLimit,
+      description: promotion.description || "",
+      discount: promotion.discount,
+      usage_limit: promotion.usage_limit || 0,
+      valid_until: promotion.valid_until || "",
+      status: promotion.status || "inactive",
     });
-
-    setShowEditDialog(true);
+    setIsEditDialogOpen(true);
   };
 
-  // Handle saving edited promotion
-  const handleSaveEdit = () => {
+  const handleAddPromotion = (data: Partial<Promotion>) => {
+    addPromotionMutation.mutate({
+      ...data,
+      used_count: 0,
+    });
+  };
+
+  const handleUpdatePromotion = (data: Partial<Promotion>) => {
     if (!selectedPromotion) return;
-
-    // Validation
-    if (!editedPromotion.code) {
-      toast({
-        title: "Validation Error",
-        description: "Promo code is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!editedPromotion.discount) {
-      toast({
-        title: "Validation Error",
-        description: "Discount amount is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!editedPromotion.validUntil) {
-      toast({
-        title: "Validation Error",
-        description: "Valid until date is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Format the discount based on the type
-    const formattedDiscount =
-      editedPromotion.discountType === "%"
-        ? `${editedPromotion.discount}%`
-        : `$${editedPromotion.discount}`;
-
-    // Update the promotion
-    const updatedPromotions = promotions.map((p) => {
-      if (p.id === selectedPromotion.id) {
-        return {
-          ...p,
-          code: editedPromotion.code.toUpperCase(),
-          discount: formattedDiscount,
-          description: editedPromotion.description,
-          validUntil: new Date(editedPromotion.validUntil).toLocaleDateString(
-            "en-US",
-            {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            },
-          ),
-          usageLimit: parseInt(editedPromotion.usageLimit.toString()),
-          // Keep the status as is
-        };
-      }
-      return p;
-    });
-
-    setPromotions(updatedPromotions);
-    toast({
-      title: "Success",
-      description: `Promotion ${editedPromotion.code} updated successfully`,
-    });
-
-    setShowEditDialog(false);
-  };
-
-  // Handle activating promotion from edit dialog
-  const handleActivateFromEdit = () => {
-    if (!selectedPromotion) return;
-
-    const updatedPromotions = promotions.map((p) => {
-      if (p.id === selectedPromotion.id) {
-        return { ...p, status: "active" };
-      }
-      return p;
-    });
-
-    setPromotions(updatedPromotions);
-    toast({
-      title: "Success",
-      description: `Promotion ${selectedPromotion.code} has been activated`,
-    });
-
-    setShowEditDialog(false);
-  };
-
-  // Handle deactivating promotion
-  const handleDeactivateClick = (promotion) => {
-    setSelectedPromotion(promotion);
-    setShowDeleteDialog(true);
-  };
-
-  // Handle confirming deactivation
-  const handleConfirmDeactivate = () => {
-    if (!selectedPromotion) return;
-
-    const updatedPromotions = promotions.map((p) => {
-      if (p.id === selectedPromotion.id) {
-        return { ...p, status: "inactive" };
-      }
-      return p;
-    });
-
-    setPromotions(updatedPromotions);
-    toast({
-      title: "Success",
-      description: `Promotion ${selectedPromotion.code} has been deactivated`,
-    });
-
-    setShowDeleteDialog(false);
-  };
-
-  // Handle activating promotion from deactivate dialog
-  const handleActivateFromDialog = () => {
-    if (!selectedPromotion) return;
-
-    const updatedPromotions = promotions.map((p) => {
-      if (p.id === selectedPromotion.id) {
-        return { ...p, status: "active" };
-      }
-      return p;
-    });
-
-    setPromotions(updatedPromotions);
-    toast({
-      title: "Success",
-      description: `Promotion ${selectedPromotion.code} has been activated`,
-    });
-
-    setShowDeleteDialog(false);
-  };
-
-  // Handle saving pricing rules
-  const handleSavePricingRules = () => {
-    // Validate pricing values
-    if (isNaN(parseInt(weekendPricing)) || isNaN(parseInt(holidayPricing))) {
-      toast({
-        title: "Validation Error",
-        description: "Pricing percentages must be valid numbers",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // In a real app, this would make an API call to update the pricing rules
-    toast({
-      title: "Success",
-      description: "Pricing rules saved successfully",
+    updatePromotionMutation.mutate({
+      id: selectedPromotion.id,
+      updates: data,
     });
   };
+
+  // Handle loading and error states
+  if (promotionsLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Promotions Management</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-salon-purple mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading promotions...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (promotionsError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Promotions Management</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading promotions: {promotionsError.message}</p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["promotions"] })}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Dynamic Pricing & Promotions</h1>
+        <h1 className="text-2xl font-bold">Promotions Management</h1>
+        <Button
+          className="bg-salon-purple hover:bg-salon-dark-purple"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <Plus size={16} className="mr-2" />
+          Add New Promotion
+        </Button>
       </div>
 
-      {/* Create Promotion Card */}
+      {/* Filters */}
       <Card className="border-none shadow-md">
         <CardHeader>
-          <CardTitle>Create New Discount Code</CardTitle>
-          <CardDescription>
-            Create a new promotional code for special offers
-          </CardDescription>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="code">Promo Code</Label>
-                <Input
-                  id="code"
-                  placeholder="e.g. SUMMER25"
-                  className="mt-1"
-                  value={newPromotion.code}
-                  onChange={(e) =>
-                    setNewPromotion({ ...newPromotion, code: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="discount">Discount Amount</Label>
-                <div className="flex mt-1">
-                  <Input
-                    id="discount"
-                    placeholder="25"
-                    className="rounded-r-none"
-                    value={newPromotion.discount}
-                    onChange={(e) =>
-                      setNewPromotion({
-                        ...newPromotion,
-                        discount: e.target.value,
-                      })
-                    }
-                  />
-                  <select
-                    className="bg-gray-100 border border-input px-4 py-2 rounded-r-md focus:outline-none"
-                    value={newPromotion.discountType}
-                    onChange={(e) =>
-                      setNewPromotion({
-                        ...newPromotion,
-                        discountType: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="%">%</option>
-                    <option value="$">$</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  placeholder="Brief description of the promotion"
-                  className="mt-1"
-                  value={newPromotion.description}
-                  onChange={(e) =>
-                    setNewPromotion({
-                      ...newPromotion,
-                      description: e.target.value,
-                    })
-                  }
-                />
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search promotions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="valid-until">Valid Until</Label>
-                <Input
-                  id="valid-until"
-                  type="date"
-                  className="mt-1"
-                  value={newPromotion.validUntil}
-                  onChange={(e) =>
-                    setNewPromotion({
-                      ...newPromotion,
-                      validUntil: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="usage-limit">Usage Limit</Label>
-                <Input
-                  id="usage-limit"
-                  type="number"
-                  placeholder="100"
-                  className="mt-1"
-                  value={newPromotion.usageLimit}
-                  onChange={(e) =>
-                    setNewPromotion({
-                      ...newPromotion,
-                      usageLimit: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              <div className="pt-6 flex justify-end">
-                <Button
-                  className="bg-salon-purple hover:bg-salon-dark-purple booking-btn"
-                  onClick={handleCreatePromotion}
-                >
-                  Create Promotion
-                </Button>
-              </div>
-            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Active Promotions */}
+      {/* Promotions Table */}
       <Card className="border-none shadow-md">
         <CardHeader>
-          <CardTitle>Active Promotions</CardTitle>
+          <CardTitle>All Promotions</CardTitle>
           <CardDescription>
-            Manage your current promotional offers
+            Manage discount codes and promotional offers
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-semibold text-gray-500 border-b">
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Discount</th>
-                  <th className="px-4 py-3">Description</th>
-                  <th className="px-4 py-3">Valid Until</th>
-                  <th className="px-4 py-3">Usage</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {promotions.map((promo) => (
-                  <tr key={promo.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium">
-                      {promo.code}
-                    </td>
-                    <td className="px-4 py-4 text-sm">{promo.discount}</td>
-                    <td className="px-4 py-4 text-sm">{promo.description}</td>
-                    <td className="px-4 py-4 text-sm">{promo.validUntil}</td>
-                    <td className="px-4 py-4 text-sm">
-                      {promo.usedCount} / {promo.usageLimit}
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div
-                          className="bg-salon-purple h-2 rounded-full"
-                          style={{
-                            width: `${(promo.usedCount / promo.usageLimit) * 100}%`,
-                          }}
-                        />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Discount</TableHead>
+                  <TableHead>Usage</TableHead>
+                  <TableHead>Valid Until</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPromotions.map((promotion) => (
+                  <TableRow key={promotion.id}>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Tag size={14} className="mr-2 text-gray-400" />
+                        <div>
+                          <div className="font-medium font-mono">{promotion.code}</div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          promo.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px]">
+                        {promotion.description || "No description"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{promotion.discount}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Users size={14} className="mr-2 text-gray-400" />
+                        <div>
+                          <div className="font-medium">
+                            {promotion.used_count || 0} / {promotion.usage_limit || "∞"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {promotion.usage_limit && promotion.used_count 
+                              ? `${Math.round(((promotion.used_count || 0) / promotion.usage_limit) * 100)}% used`
+                              : "No limit"
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Calendar size={14} className="mr-2 text-gray-400" />
+                        {promotion.valid_until || "No expiry"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={`${getStatusBadge(promotion.status)} border-0`}
                       >
-                        {promo.status === "active" ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-right text-sm">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => handleEditClick(promo)}
-                      >
-                        Edit
-                      </Button>
-                      {promo.status === "active" ? (
+                        {(promotion.status || "inactive").charAt(0).toUpperCase() + (promotion.status || "inactive").slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditPromotion(promotion)}
+                        >
+                          Edit
+                        </Button>
+                        <Select
+                          value={promotion.status || "inactive"}
+                          onValueChange={(value) => handleStatusUpdate(promotion.id, value)}
+                        >
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <Button
                           variant="outline"
                           size="sm"
                           className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeactivateClick(promo)}
+                          onClick={() => removePromotionMutation.mutate(promotion.id)}
                         >
-                          Deactivate
+                          Remove
                         </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-green-600 hover:text-green-700"
-                          onClick={() => {
-                            setSelectedPromotion(promo);
-                            handleActivateFromDialog();
-                          }}
-                        >
-                          Activate
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-
-            {promotions.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No active promotions found</p>
-              </div>
-            )}
+                {filteredPromotions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      No promotions found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Dynamic Pricing */}
-      <Card className="border-none shadow-md">
-        <CardHeader>
-          <CardTitle>Dynamic Pricing Rules</CardTitle>
-          <CardDescription>
-            Set up pricing adjustments for peak times and seasons
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Weekend Pricing</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <span>Increase prices by:</span>
-                    <div className="flex items-center">
-                      <Input
-                        type="number"
-                        value={weekendPricing}
-                        onChange={(e) => setWeekendPricing(e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="ml-2">%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Apply to days:</span>
-                    <div className="flex gap-2">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                          checked={fridayChecked}
-                          onChange={() => setFridayChecked(!fridayChecked)}
-                        />
-                        <span>Fri</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                          checked={saturdayChecked}
-                          onChange={() => setSaturdayChecked(!saturdayChecked)}
-                        />
-                        <span>Sat</span>
-                      </label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      {/* Add Promotion Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Promotion</DialogTitle>
+            <DialogDescription>
+              Create a new discount code or promotional offer
+            </DialogDescription>
+          </DialogHeader>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Holiday Pricing</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <span>Increase prices by:</span>
-                    <div className="flex items-center">
-                      <Input
-                        type="number"
-                        value={holidayPricing}
-                        onChange={(e) => setHolidayPricing(e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="ml-2">%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Apply to events:</span>
-                    <div>
-                      <span className="text-sm text-gray-500">
-                        Eid, Ramadan, New Year
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <Form {...addForm}>
+            <form
+              className="space-y-4"
+              onSubmit={addForm.handleSubmit(handleAddPromotion)}
+            >
+              <FormField
+                control={addForm.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Promo Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., SUMMER25" className="font-mono" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex justify-end">
-              <Button
-                className="bg-salon-purple hover:bg-salon-dark-purple booking-btn"
-                onClick={handleSavePricingRules}
-              >
-                Save Pricing Rules
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              <FormField
+                control={addForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Brief description of the offer" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addForm.control}
+                name="discount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., 25% off, EGP 100 off" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addForm.control}
+                name="usage_limit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Usage Limit</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" placeholder="Leave empty for unlimited" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addForm.control}
+                name="valid_until"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valid Until</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Add Promotion</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Promotion Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Promotion</DialogTitle>
             <DialogDescription>
-              Update the details of this promotion
+              Update promotion details
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-code">Promo Code</Label>
-              <Input
-                id="edit-code"
-                value={editedPromotion.code}
-                onChange={(e) =>
-                  setEditedPromotion({
-                    ...editedPromotion,
-                    code: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-discount">Discount Amount</Label>
-              <div className="flex">
-                <Input
-                  id="edit-discount"
-                  value={editedPromotion.discount}
-                  onChange={(e) =>
-                    setEditedPromotion({
-                      ...editedPromotion,
-                      discount: e.target.value,
-                    })
-                  }
-                  className="rounded-r-none"
-                />
-                <select
-                  className="bg-gray-100 border border-input px-4 py-2 rounded-r-md focus:outline-none"
-                  value={editedPromotion.discountType}
-                  onChange={(e) =>
-                    setEditedPromotion({
-                      ...editedPromotion,
-                      discountType: e.target.value,
-                    })
-                  }
-                >
-                  <option value="%">%</option>
-                  <option value="$">$</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Input
-                id="edit-description"
-                value={editedPromotion.description}
-                onChange={(e) =>
-                  setEditedPromotion({
-                    ...editedPromotion,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-valid-until">Valid Until</Label>
-              <Input
-                id="edit-valid-until"
-                type="date"
-                value={editedPromotion.validUntil}
-                onChange={(e) =>
-                  setEditedPromotion({
-                    ...editedPromotion,
-                    validUntil: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-usage-limit">Usage Limit</Label>
-              <Input
-                id="edit-usage-limit"
-                type="number"
-                value={editedPromotion.usageLimit}
-                onChange={(e) =>
-                  setEditedPromotion({
-                    ...editedPromotion,
-                    usageLimit: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            {selectedPromotion && selectedPromotion.status === "inactive" && (
-              <Button
-                variant="outline"
-                className="bg-green-600 text-white hover:bg-green-700"
-                onClick={handleActivateFromEdit}
-              >
-                Activate
-              </Button>
-            )}
-            {selectedPromotion && selectedPromotion.status === "active" && (
-              <Button
-                variant="outline"
-                className="bg-red-600 text-white hover:bg-red-700"
-                onClick={() => {
-                  if (selectedPromotion) {
-                    const updatedPromotions = promotions.map((p) => {
-                      if (p.id === selectedPromotion.id) {
-                        return { ...p, status: "inactive" };
-                      }
-                      return p;
-                    });
 
-                    setPromotions(updatedPromotions);
-                    toast({
-                      title: "Success",
-                      description: `Promotion ${selectedPromotion.code} has been deactivated`,
-                    });
-                    setShowEditDialog(false);
-                  }
-                }}
+          {selectedPromotion && (
+            <Form {...editForm}>
+              <form
+                className="space-y-4"
+                onSubmit={editForm.handleSubmit(handleUpdatePromotion)}
               >
-                Deactivate
-              </Button>
-            )}
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
+                <FormField
+                  control={editForm.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Promo Code</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="font-mono" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="discount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="usage_limit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Usage Limit</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="valid_until"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valid Until</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Changes</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Deactivate Promotion Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Promotion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to deactivate the promotion code "
-              {selectedPromotion?.code}"? This will prevent users from applying
-              this discount.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-row justify-end gap-2">
-            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
-              Cancel
-            </AlertDialogCancel>
-            {selectedPromotion && selectedPromotion.status === "inactive" && (
-              <Button
-                className="bg-green-600 text-white hover:bg-green-700"
-                onClick={handleActivateFromDialog}
-              >
-                Activate
-              </Button>
-            )}
-            {selectedPromotion && selectedPromotion.status === "active" && (
-              <AlertDialogAction
-                onClick={handleConfirmDeactivate}
-                className="bg-red-600 text-white hover:bg-red-700"
-              >
-                Deactivate
-              </AlertDialogAction>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

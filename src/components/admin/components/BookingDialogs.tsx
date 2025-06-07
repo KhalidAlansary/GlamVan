@@ -464,7 +464,7 @@ const BookingDialogs = ({
     setShowEditDialog(true);
   };
 
-  const { data: services } = useQuery({
+  const { data: services = [] } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data } = await supabase.from("services").select("*");

@@ -6,7 +6,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { BookingData } from "../BookingForm";
 import { MapPin, Truck } from "lucide-react";
-import { getAvailableVanForLocation } from "@/data/vans";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -34,6 +36,24 @@ const LocationSelection = ({
   const [assignedVan, setAssignedVan] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState("");
   const [tokenEntered, setTokenEntered] = useState(false);
+
+  // Fetch available vans from Supabase
+  const { data: vans = [] } = useQuery({
+    queryKey: ["vans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vans")
+        .select("*")
+        .eq("status", "available");
+
+      if (error) {
+        console.error("Error fetching vans:", error);
+        throw error;
+      }
+
+      return data as Tables<"vans">[];
+    },
+  });
 
   const initializeMap = (token: string) => {
     if (!mapContainer.current || map.current) return;
@@ -108,17 +128,41 @@ const LocationSelection = ({
 
   // Check for available van when location changes
   useEffect(() => {
-    if (bookingData.location) {
-      const availableVan = getAvailableVanForLocation(bookingData.location);
+    if (bookingData.location && vans.length > 0) {
+      // Location mapping for Egyptian areas
+      const locationMapping: { [key: string]: string[] } = {
+        "New Cairo": ["New Cairo", "Cairo", "Nasr City"],
+        "El Rehab": ["El Rehab", "New Cairo", "Cairo"],
+        "Sheikh Zayed": ["Sheikh Zayed", "6th of October", "Giza"],
+        "Tagmo3": ["Tagmo3", "New Cairo", "El Rehab"],
+        "Maadi": ["Maadi", "Cairo"],
+        "Zamalek": ["Zamalek", "Cairo"],
+        "Heliopolis": ["Heliopolis", "Cairo", "Nasr City"],
+        "Dokki": ["Dokki", "Giza"],
+        "Mohandessin": ["Mohandessin", "Giza"],
+        "Nasr City": ["Nasr City", "Cairo", "Heliopolis"],
+      };
+
+      const possibleLocations = locationMapping[bookingData.location] || [bookingData.location];
+      
+      // Find available van for the location
+      const availableVan = vans.find(van => 
+        possibleLocations.some(loc => 
+          van.location?.toLowerCase().includes(loc.toLowerCase()) ||
+          van.name?.toLowerCase().includes(loc.toLowerCase())
+        )
+      ) || vans[0]; // Fallback to first available van
+
       if (availableVan) {
-        setAssignedVan(availableVan.name);
-        updateBookingData({ assignedVan: availableVan.name });
+        const vanName = availableVan.name || `Van ${availableVan.id}`;
+        setAssignedVan(vanName);
+        updateBookingData({ assignedVan: vanName });
       } else {
         setAssignedVan(null);
         updateBookingData({ assignedVan: undefined });
       }
     }
-  }, [bookingData.location]);
+  }, [bookingData.location, vans]);
 
   // Cleanup map on unmount
   useEffect(() => {

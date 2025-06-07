@@ -41,11 +41,14 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import {
-  vans as initialVans,
-  getAvailableVanForLocation,
-  Van,
-} from "@/data/vans";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
+
+// Define Van type based on Supabase table
+type Van = Tables<"vans"> & {
+  id: string; // Convert number to string for compatibility
+};
 
 const CAIRO_LOCATIONS = ["El Rehab", "New Cairo", "Sheikh Zayed", "Tagmo3"];
 
@@ -57,17 +60,150 @@ const SERVICES = [
   "Hair Styling",
 ];
 
+// Location to van mapping for automatic assignment
+const locationVanMapping: Record<string, number[]> = {
+  "New Cairo": [1],
+  "El Rehab": [1], // Close to New Cairo
+  Tagmo3: [1], // Close to New Cairo
+  "Sheikh Zayed": [2],
+};
+
+const getAvailableVanForLocation = (location: string, vans: Van[]): Van | null => {
+  const vanIds = locationVanMapping[location] || [];
+
+  for (const vanId of vanIds) {
+    const van = vans.find((v) => v.id === vanId.toString() && v.status === "available");
+    if (van) {
+      return van;
+    }
+  }
+
+  // If no location-specific van is available, return any available van
+  return vans.find((v) => v.status === "available") || null;
+};
+
 const AdminVans = () => {
   const [activeTab, setActiveTab] = useState("assignments");
   const [isEditVanOpen, setIsEditVanOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
-  const [currentVan, setCurrentVan] = useState(null);
+  const [currentVan, setCurrentVan] = useState<Van | null>(null);
   const [currentAssignment, setCurrentAssignment] = useState(null);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
   const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
 
-  const [vans, setVans] = useState(initialVans);
+  const queryClient = useQueryClient();
+
+  // Fetch vans from Supabase
+  const { data: vansData = [], isLoading: vansLoading, error: vansError } = useQuery({
+    queryKey: ["vans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vans")
+        .select("*")
+        .order("id");
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Convert to compatible format
+      return data.map(van => ({
+        ...van,
+        id: van.id.toString(),
+        status: van.status || "available",
+        location: van.location || "New Cairo",
+        last_service: van.last_service || new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        capacity: van.capacity || "4 stylists",
+        driver: van.driver || "Not assigned",
+      })) as Van[];
+    },
+  });
+
+  // Mutation for adding a new van
+  const addVanMutation = useMutation({
+    mutationFn: async (newVan: { name: string; driver?: string }) => {
+      const { data, error } = await supabase
+        .from("vans")
+        .insert({
+          name: newVan.name,
+          driver: newVan.driver || "Not assigned",
+          status: "available",
+          location: "New Cairo",
+          last_service: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          capacity: "4 stylists",
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vans"] });
+      toast.success("New van added to fleet");
+    },
+    onError: (error) => {
+      toast.error(`Failed to add van: ${error.message}`);
+    },
+  });
+
+  // Mutation for updating a van
+  const updateVanMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Tables<"vans">> }) => {
+      const { data, error } = await supabase
+        .from("vans")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vans"] });
+      toast.success("Van updated successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to update van: ${error.message}`);
+    },
+  });
+
+  // Mutation for removing a van
+  const removeVanMutation = useMutation({
+    mutationFn: async (vanId: number) => {
+      const { error } = await supabase
+        .from("vans")
+        .delete()
+        .eq("id", vanId);
+      
+      if (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vans"] });
+      toast.success("Van removed from fleet");
+    },
+    onError: (error) => {
+      toast.error(`Failed to remove van: ${error.message}`);
+    },
+  });
 
   const [vanAssignments, setVanAssignments] = useState([
     {
@@ -75,7 +211,7 @@ const AdminVans = () => {
       bookingId: "BK-1234",
       client: "Fatima Ahmed",
       service: "Bridal Makeup",
-      vanId: "VAN-001",
+      vanId: "1",
       vanName: "GlamVan Luxury",
       date: "May 2, 2025",
       time: "10:00 AM",
@@ -87,7 +223,7 @@ const AdminVans = () => {
       bookingId: "BK-1235",
       client: "Mariam Khalid",
       service: "Hair & Nails",
-      vanId: "VAN-002",
+      vanId: "2",
       vanName: "GlamVanLuxury 1",
       date: "May 3, 2025",
       time: "2:30 PM",
@@ -125,7 +261,7 @@ const AdminVans = () => {
   const handleManualBooking = (data) => {
     const newBookingId = `BK-${1000 + vanAssignments.length}`;
 
-    const availableVan = getAvailableVanForLocation(data.location);
+    const availableVan = getAvailableVanForLocation(data.location, vansData);
 
     const newAssignment = {
       id: `VA-${1004 + vanAssignments.length - 3}`,
@@ -157,7 +293,7 @@ const AdminVans = () => {
   };
 
   const handleAssignVan = (assignment, vanId) => {
-    const selectedVan = vans.find((van) => van.id === vanId);
+    const selectedVan = vansData.find((van) => van.id === vanId);
 
     if (!selectedVan) {
       toast.error("Please select a van first");
@@ -205,23 +341,17 @@ const AdminVans = () => {
   const handleEditVan = (data) => {
     if (!currentVan) return;
 
-    setVans((prev) =>
-      prev.map((van) => {
-        if (van.id === currentVan.id) {
-          return {
-            ...van,
-            name: data.name,
-            driver: data.driver,
-            location: data.location,
-            capacity: data.capacity,
-          };
-        }
-        return van;
-      }),
-    );
+    updateVanMutation.mutate({
+      id: parseInt(currentVan.id),
+      updates: {
+        name: data.name,
+        driver: data.driver,
+        location: data.location,
+        capacity: data.capacity,
+      },
+    });
 
     setIsEditVanOpen(false);
-    toast.success(`Van ${data.name} updated successfully`);
   };
 
   const handleAddVan = () => {
@@ -243,22 +373,7 @@ const AdminVans = () => {
       return;
     }
 
-    const newVan: Van = {
-      id: `VAN-00${vans.length + 1}`,
-      name,
-      driver: driver || "Not assigned",
-      status: "available" as const,
-      location: "New Cairo",
-      lastService: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      capacity: "4 stylists",
-    };
-
-    setVans((prev) => [...prev, newVan]);
-    toast.success(`New van ${name} added to fleet`);
+    addVanMutation.mutate({ name, driver });
 
     nameInput.value = "";
     driverInput.value = "";
@@ -274,8 +389,7 @@ const AdminVans = () => {
       return;
     }
 
-    setVans((prev) => prev.filter((van) => van.id !== vanId));
-    toast.success("Van removed from fleet");
+    removeVanMutation.mutate(parseInt(vanId));
   };
 
   const handleScheduleService = (data) => {
@@ -283,17 +397,12 @@ const AdminVans = () => {
 
     const nextServiceDate = data.serviceDate;
 
-    setVans((prev) =>
-      prev.map((van) => {
-        if (van.id === currentVan.id) {
-          return {
-            ...van,
-            status: van.status === "maintenance" ? "available" : van.status,
-          };
-        }
-        return van;
-      }),
-    );
+    updateVanMutation.mutate({
+      id: parseInt(currentVan.id),
+      updates: {
+        status: currentVan.status === "maintenance" ? "available" : currentVan.status,
+      },
+    });
 
     setIsServiceDialogOpen(false);
     toast.success(
@@ -314,19 +423,12 @@ const AdminVans = () => {
       return;
     }
 
-    setVans((prev) =>
-      prev.map((van) => {
-        if (van.id === vanId) {
-          return {
-            ...van,
-            status: "maintenance",
-          };
-        }
-        return van;
-      }),
-    );
-
-    toast.success("Van marked for maintenance");
+    updateVanMutation.mutate({
+      id: parseInt(vanId),
+      updates: {
+        status: "maintenance",
+      },
+    });
   };
 
   const openAssignDialog = (assignment) => {
@@ -393,24 +495,17 @@ const AdminVans = () => {
   };
 
   const handleCompleteMaintenance = (vanId) => {
-    setVans((prev) =>
-      prev.map((van) => {
-        if (van.id === vanId && van.status === "maintenance") {
-          const today = new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          });
-
-          return {
-            ...van,
-            status: "available",
-            lastService: today,
-          };
-        }
-        return van;
-      }),
-    );
+    updateVanMutation.mutate({
+      id: parseInt(vanId),
+      updates: {
+        status: "available",
+        last_service: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      },
+    });
 
     toast.success("Maintenance completed. Van is now available.");
   };
@@ -431,6 +526,41 @@ const AdminVans = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  // Handle loading and error states
+  if (vansLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Van Management</h1>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-salon-purple mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading vans...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (vansError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Van Management</h1>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading vans: {vansError.message}</p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["vans"] })}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -527,7 +657,7 @@ const AdminVans = () => {
                                 <SelectValue placeholder="Select Van" />
                               </SelectTrigger>
                               <SelectContent>
-                                {vans
+                                {vansData
                                   .filter((v) => v.status === "available")
                                   .map((van) => (
                                     <SelectItem key={van.id} value={van.id}>
@@ -680,7 +810,7 @@ const AdminVans = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vans.map((van) => (
+                  {vansData.map((van) => (
                     <TableRow key={van.id}>
                       <TableCell className="font-medium">{van.id}</TableCell>
                       <TableCell>
@@ -768,8 +898,8 @@ const AdminVans = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vans.map((van) => {
-                    const lastServiceDate = new Date(van.lastService);
+                  {vansData.map((van) => {
+                    const lastServiceDate = new Date(van.last_service);
                     const nextServiceDate = new Date(lastServiceDate);
                     nextServiceDate.setMonth(lastServiceDate.getMonth() + 3);
                     const nextService = nextServiceDate.toLocaleDateString(
@@ -798,7 +928,7 @@ const AdminVans = () => {
                               size={14}
                               className="mr-1 text-gray-400"
                             />
-                            {van.lastService}
+                            {van.last_service}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -906,7 +1036,7 @@ const AdminVans = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {vans
+                                {vansData
                                   .filter((v) => v.status === "available")
                                   .map((van) => (
                                     <SelectItem key={van.id} value={van.id}>

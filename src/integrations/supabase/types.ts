@@ -9,30 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      customer: {
+      bookings: {
         Row: {
-          email: string | null;
-          id: number;
-          location: string | null;
-          name: string;
-          number: number | null;
-          password: string | null;
+          address: string | null;
+          beautician: string | null;
+          client: string;
+          created_at: string | null;
+          date: string;
+          id: string;
+          location: string;
+          payment: string | null;
+          payment_status: string | null;
+          phone: string | null;
+          price: string | null;
+          service: string;
+          status: string;
+          time: string;
+          updated_at: string | null;
+          van: string | null;
         };
         Insert: {
-          email?: string | null;
-          id?: number;
-          location?: string | null;
-          name?: string;
-          number?: number | null;
-          password?: string | null;
+          address?: string | null;
+          beautician?: string | null;
+          client: string;
+          created_at?: string | null;
+          date: string;
+          id: string;
+          location: string;
+          payment?: string | null;
+          payment_status?: string | null;
+          phone?: string | null;
+          price?: string | null;
+          service: string;
+          status?: string;
+          time: string;
+          updated_at?: string | null;
+          van?: string | null;
         };
         Update: {
-          email?: string | null;
-          id?: number;
-          location?: string | null;
-          name?: string;
-          number?: number | null;
-          password?: string | null;
+          address?: string | null;
+          beautician?: string | null;
+          client?: string;
+          created_at?: string | null;
+          date?: string;
+          id?: string;
+          location?: string;
+          payment?: string | null;
+          payment_status?: string | null;
+          phone?: string | null;
+          price?: string | null;
+          service?: string;
+          status?: string;
+          time?: string;
+          updated_at?: string | null;
+          van?: string | null;
         };
         Relationships: [];
       };
@@ -61,6 +91,45 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      payments: {
+        Row: {
+          amount: string;
+          booking_id: string | null;
+          client: string;
+          created_at: string | null;
+          date: string;
+          id: string;
+          method: string;
+          service: string | null;
+          status: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          amount: string;
+          booking_id?: string | null;
+          client: string;
+          created_at?: string | null;
+          date: string;
+          id: string;
+          method: string;
+          service?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          amount?: string;
+          booking_id?: string | null;
+          client?: string;
+          created_at?: string | null;
+          date?: string;
+          id?: string;
+          method?: string;
+          service?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
       };
       posts: {
         Row: {
@@ -116,6 +185,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      promotions: {
+        Row: {
+          code: string;
+          created_at: string | null;
+          description: string | null;
+          discount: string;
+          id: number;
+          status: string | null;
+          updated_at: string | null;
+          usage_limit: number | null;
+          used_count: number | null;
+          valid_until: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string | null;
+          description?: string | null;
+          discount: string;
+          id?: number;
+          status?: string | null;
+          updated_at?: string | null;
+          usage_limit?: number | null;
+          used_count?: number | null;
+          valid_until?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string | null;
+          description?: string | null;
+          discount?: string;
+          id?: number;
+          status?: string | null;
+          updated_at?: string | null;
+          usage_limit?: number | null;
+          used_count?: number | null;
+          valid_until?: string | null;
+        };
+        Relationships: [];
+      };
+      refunds: {
+        Row: {
+          amount: string;
+          client: string;
+          created_at: string | null;
+          date: string;
+          id: string;
+          original_payment: string | null;
+          reason: string | null;
+          status: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          amount: string;
+          client: string;
+          created_at?: string | null;
+          date: string;
+          id: string;
+          original_payment?: string | null;
+          reason?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          amount?: string;
+          client?: string;
+          created_at?: string | null;
+          date?: string;
+          id?: string;
+          original_payment?: string | null;
+          reason?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       services: {
         Row: {
           category: string;
@@ -149,6 +293,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      stylists: {
+        Row: {
+          bookings_completed: number[] | null;
+          created_at: string | null;
+          experience: string | null;
+          id: number;
+          image: string | null;
+          name: string;
+          phone: string | null;
+          rating: number | null;
+          specialties: string[] | null;
+          status: string | null;
+          updated_at: string | null;
+          work_zones: string[] | null;
+        };
+        Insert: {
+          bookings_completed?: number[] | null;
+          created_at?: string | null;
+          experience?: string | null;
+          id?: number;
+          image?: string | null;
+          name: string;
+          phone?: string | null;
+          rating?: number | null;
+          specialties?: string[] | null;
+          status?: string | null;
+          updated_at?: string | null;
+          work_zones?: string[] | null;
+        };
+        Update: {
+          bookings_completed?: number[] | null;
+          created_at?: string | null;
+          experience?: string | null;
+          id?: number;
+          image?: string | null;
+          name?: string;
+          phone?: string | null;
+          rating?: number | null;
+          specialties?: string[] | null;
+          status?: string | null;
+          updated_at?: string | null;
+          work_zones?: string[] | null;
+        };
+        Relationships: [];
+      };
       vans: {
         Row: {
           capacity: string | null;
@@ -176,6 +365,48 @@ export type Database = {
           location?: string | null;
           name?: string;
           status?: string | null;
+        };
+        Relationships: [];
+      };
+      wedding_contracts: {
+        Row: {
+          client: string;
+          contract_status: string | null;
+          created_at: string | null;
+          date: string;
+          deposit: string | null;
+          id: string;
+          location: string;
+          package: string;
+          payment_status: string | null;
+          total_amount: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          client: string;
+          contract_status?: string | null;
+          created_at?: string | null;
+          date: string;
+          deposit?: string | null;
+          id: string;
+          location: string;
+          package: string;
+          payment_status?: string | null;
+          total_amount: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          client?: string;
+          contract_status?: string | null;
+          created_at?: string | null;
+          date?: string;
+          deposit?: string | null;
+          id?: string;
+          location?: string;
+          package?: string;
+          payment_status?: string | null;
+          total_amount?: string;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
