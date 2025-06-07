@@ -14,173 +14,214 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type AuthMode = "login" | "signup";
+
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("client");
-  const { login } = useAuth();
+  const [name, setName] = useState("");
+  const [userType, setUserType] = useState<"client" | "stylist">("client");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, signup } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setUserType("client");
+    setIsLoading(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // For demo purposes, auto-fill credentials based on user type
-    let loginEmail = email;
-    let loginPassword = password;
-
-    if (userType === "admin" && !email && !password) {
-      loginEmail = "admin@example.com";
-      loginPassword = "admin123";
-    } else if (userType === "beautician" && !email && !password) {
-      loginEmail = "beautician@example.com";
-      loginPassword = "beauty123";
+    
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+      });
+      return;
     }
 
-    try {
-      const isLoggedIn = await login(loginEmail, loginPassword);
-      if (isLoggedIn) {
-        toast({
-          title: "Login successful",
-          description: "You have been logged in successfully.",
-        });
-        onClose();
+    if (authMode === "signup" && !name) {
+      toast({
+        variant: "destructive",
+        title: "Missing name",
+        description: "Please enter your name to sign up.",
+      });
+      return;
+    }
 
-        // Redirect based on user type
-        if (userType === "admin") {
-          navigate("/admin");
-        } else if (userType === "beautician") {
+    setIsLoading(true);
+
+    try {
+      let result;
+      
+      if (authMode === "login") {
+        result = await login(email, password);
+      } else {
+        result = await signup(email, password, name, userType);
+      }
+
+      if (result.success) {
+        toast({
+          title: authMode === "login" ? "Login successful" : "Account created",
+          description: authMode === "login" 
+            ? "You have been logged in successfully." 
+            : "Your account has been created successfully.",
+        });
+        
+        handleClose();
+
+        // Redirect based on user type for beauticians
+        if (userType === "stylist") {
           navigate("/beautician");
         }
       } else {
         toast({
           variant: "destructive",
-          title: "Login failed",
-          description: "Please check your credentials and try again.",
+          title: `${authMode === "login" ? "Login" : "Signup"} failed`,
+          description: result.error || "Please try again.",
         });
       }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Login error",
-        description: "An unexpected error occurred.",
+        title: "Unexpected error",
+        description: "An unexpected error occurred. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const switchAuthMode = () => {
+    setAuthMode(authMode === "login" ? "signup" : "login");
+    resetForm();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Login</DialogTitle>
+          <DialogTitle>
+            {authMode === "login" ? "Welcome Back" : "Create Account"}
+          </DialogTitle>
           <DialogDescription>
-            Enter your credentials to access your account.
+            {authMode === "login" 
+              ? "Sign in to your account to continue."
+              : "Create a new account to get started."
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="client" onValueChange={setUserType}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="client">Client</TabsTrigger>
-            <TabsTrigger value="beautician">Beautician</TabsTrigger>
-            <TabsTrigger value="admin">Admin</TabsTrigger>
-          </TabsList>
-          <TabsContent value="client">
-            <form onSubmit={handleLogin}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="client-email">Email</Label>
+        <Card>
+          <CardContent className="p-6">
+            {authMode === "signup" && (
+              <>
+                <div className="space-y-4 mb-6">
+                  <div className="text-center">
+                    <Label className="text-base font-medium">Account Type</Label>
+                    <p className="text-sm text-muted-foreground">Choose your account type</p>
+                  </div>
+                  <Tabs value={userType} onValueChange={(value) => setUserType(value as "client" | "stylist")}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="client">Client</TabsTrigger>
+                      <TabsTrigger value="stylist">Beautician</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                <Separator className="mb-6" />
+              </>
+            )}
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              {authMode === "signup" && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
-                    id="client-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading}
+                    required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="client-password">Password</Label>
-                  <Input
-                    id="client-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  required
+                />
               </div>
-              <DialogFooter>
-                <Button type="submit">Login as Client</Button>
-              </DialogFooter>
-            </form>
-          </TabsContent>
-          <TabsContent value="beautician">
-            <form onSubmit={handleLogin}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="beautician-email">Email</Label>
-                  <Input
-                    id="beautician-email"
-                    placeholder="beautician@example.com"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Demo: beautician@example.com / beauty123
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
+                  minLength={6}
+                />
+                {authMode === "signup" && (
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 6 characters long.
                   </p>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="beautician-password">Password</Label>
-                  <Input
-                    id="beautician-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
+                )}
               </div>
-              <DialogFooter>
-                <Button type="submit">Login as Beautician</Button>
-              </DialogFooter>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {authMode === "login" ? "Sign In" : "Create Account"}
+              </Button>
             </form>
-          </TabsContent>
-          <TabsContent value="admin">
-            <form onSubmit={handleLogin}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="admin-email">Email</Label>
-                  <Input
-                    id="admin-email"
-                    placeholder="admin@example.com"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Demo: admin@example.com / admin123
-                  </p>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="admin-password">Password</Label>
-                  <Input
-                    id="admin-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Login as Admin</Button>
-              </DialogFooter>
-            </form>
-          </TabsContent>
-        </Tabs>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                {authMode === "login" ? "Don't have an account?" : "Already have an account?"}
+                <Button 
+                  variant="link" 
+                  className="p-0 ml-1" 
+                  onClick={switchAuthMode}
+                  disabled={isLoading}
+                >
+                  {authMode === "login" ? "Sign up" : "Sign in"}
+                </Button>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </DialogContent>
     </Dialog>
   );

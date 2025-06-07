@@ -8,7 +8,7 @@ import LoginModal from "@/components/LoginModal";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout, loading } = useAuth();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -22,8 +22,8 @@ const Navbar = () => {
     setIsLoginModalOpen(false);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (

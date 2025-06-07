@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminBookings from "@/components/admin/AdminBookings";
@@ -11,28 +9,7 @@ import AdminPayments from "@/components/admin/AdminPayments";
 import AdminVans from "@/components/admin/AdminVans";
 
 const Admin = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // For development/demo purposes: commented out the redirect
-    // This allows access to the admin pages without authentication
-    // In a production environment, you would want to uncomment this
-    /*
-    if (!isAuthenticated || !isAdmin) {
-      navigate("/");
-    }
-    */
-  }, [isAuthenticated, isAdmin, navigate]);
-
-  // Remove this check to always render the admin interface
-  // This is for development/demo purposes
-  // In production, you would keep this check
-  /*
-  if (!isAuthenticated || !isAdmin) {
-    return null;
-  }
-  */
+  // Authentication is now handled by ProtectedRoute wrapper
 
   return (
     <AdminLayout>
